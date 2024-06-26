@@ -6,12 +6,12 @@
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 26 Jun 2024 12:09:09 -0400</lastBuildDate>
             <atom:link href="https://scratchadams.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
-    <title>bggp4</title>
-    <link>https://scratchadams.github.io/posts/bggp4/</link>
+    <title>bggp5</title>
+    <link>https://scratchadams.github.io/posts/bggp5/</link>
     <pubDate>Wed, 26 Jun 2024 12:09:09 -0400</pubDate>
     <author>hyp</author>
-    <guid>https://scratchadams.github.io/posts/bggp4/</guid>
-    <description><![CDATA[eBPF Filter For my (first) bggp4 entry, I wanted to do something with process injection. I decided to target cURL for obvious reasons.
+    <guid>https://scratchadams.github.io/posts/bggp5/</guid>
+    <description><![CDATA[eBPF Filter For my (first) bggp5 entry, I wanted to do something with process injection. I decided to target cURL for obvious reasons.
 I initially started off exploring what I could do with PTRACE, however the binary produced was pretty large (around 14kb) and I didnot have a good way of detecting when new curl processes started and attaching to them.
 Thinking more about the problem of detecting newly started processes, I decided to look into eBPF as an option.]]></description>
 </item>

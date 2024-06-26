@@ -1,5 +1,5 @@
 ---
-title: "bggp4"
+title: "bggp5"
 date: 2024-06-26T12:09:09-04:00
 author: hyp
 draft: false
@@ -7,7 +7,7 @@ draft: false
 
 ## eBPF Filter
 
-For my (first) bggp4 entry, I wanted to do something with process injection. I decided to target cURL for obvious reasons.
+For my (first) bggp5 entry, I wanted to do something with process injection. I decided to target cURL for obvious reasons.
 
 I initially started off exploring what I could do with PTRACE, however the binary produced was pretty large (around 14kb) and I didnot have a good way of detecting when new curl processes started and attaching to them.
 
