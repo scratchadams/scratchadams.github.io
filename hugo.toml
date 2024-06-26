@@ -1,0 +1,4 @@
+baseURL = 'https://scratchadams.github.io/'
+languageCode = 'en-us'
+title = 'hypblog'
+theme = 'LoveIt'
