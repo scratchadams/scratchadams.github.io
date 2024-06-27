@@ -55,37 +55,16 @@
 </header><main class="main">
                 <div class="container"><div class="page home" data-home="posts"><div class="home-profile"><div class="home-subtitle"><div id="id-1" class="typeit"></div></div><div class="links"></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/posts/cve-2018-1160/">Cve 2018 1160</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span>&nbsp;<span class="post-publish">published on <time datetime="2024-06-27">2024-06-27</time></span></div><div class="content">CVE-2018–1160 Writeup CVE-2018–1160 is an out of bounds write in Netatalk versions prior to 3.1.12 which was disclosed by Jacob Baines of Tenable who also did a great writeup on this vulnerability that really helped in my investigation into how it works and how to exploit it.
-Netatalk is an open source implementation of AFP, which is a file control protocol specifically designed for Mac based systems. AFP uses DSI as a session layer protocol to establish new sessions between the client and server.</div><div class="post-footer">
-        <a href="/posts/cve-2018-1160/">Read More</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/posts/qemu-escape-ctf/">Qemu Escape Ctf</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span>&nbsp;<span class="post-publish">published on <time datetime="2024-06-27">2024-06-27</time></span></div><div class="content">Qemu Escape CTF Writeup This writeup will demonstrate my analysis and solution of the X-NUCA 2019 qemu escape CTF challenge. For those interested in following along or attempting the challenge themselves, the archive can be found at vexx.zip
-Initial Analysis After extracting the archive, we are presented with the following files.
-launch.sh is of interest here as it includes specific arguments for running this version of qemu, including a reference to a custom device named vexx.</div><div class="post-footer">
-        <a href="/posts/qemu-escape-ctf/">Read More</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/posts/cve-2021-33913/">CVE-2021-33913</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span>&nbsp;<span class="post-publish">published on <time datetime="2024-06-27">2024-06-27</time></span></div><div class="content">CVE-2021–33913 Analysis CVE-2021–33913 is a heap-based buffer overflow that takes place in the SPF macro expansion process of the open source SPF library libspf2. According to the website, libspf2 is used by systems such as Sendmail, Postfix, Exim, Zmailer, and MS Exchange. This vulnerability was discovered along with CVE-2021–33912 by security researcher Nathaniel Bennett, who provided some details in a blog post: https://nathanielbennett.com/blog/libspf2-cve-jan-2022-disclosure along with a patch to fix both issues: https://github.</div><div class="post-footer">
-        <a href="/posts/cve-2021-33913/">Read More</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/posts/heap3/">Everything In Its Right Place: Pt3</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span>&nbsp;<span class="post-publish">published on <time datetime="2024-06-27">2024-06-27</time></span></div><div class="content">Exploring Memory allocation, vulnerabilities, and exploitation</div><div class="post-footer">
-        <a href="/posts/heap3/">Read More</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/posts/heap2/">Everything In Its Right Place: Pt 2</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span>&nbsp;<span class="post-publish">published on <time datetime="2024-06-27">2024-06-27</time></span></div><div class="content">Exploring Memory allocation, vulnerabilities, and exploitation</div><div class="post-footer">
-        <a href="/posts/heap2/">Read More</a></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/posts/heap1/">Everything In It's Right Place</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span>&nbsp;<span class="post-publish">published on <time datetime="2024-06-27">2024-06-27</time></span></div><div class="content">Exploring Memory allocation, vulnerabilities, and exploitation</div><div class="post-footer">
-        <a href="/posts/heap1/">Read More</a></div>
-</article><ul class="pagination"><li class="page-item active">
+        <a href="/posts/bggp5/">bggp5</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span>&nbsp;<span class="post-publish">published on <time datetime="2024-06-26">2024-06-26</time></span></div><div class="content">eBPF Filter For my (first) bggp5 entry, I wanted to do something with process injection. I decided to target cURL for obvious reasons.
+I initially started off exploring what I could do with PTRACE, however the binary produced was pretty large (around 14kb) and I didnot have a good way of detecting when new curl processes started and attaching to them.
+Thinking more about the problem of detecting newly started processes, I decided to look into eBPF as an option.</div><div class="post-footer">
+        <a href="/posts/bggp5/">Read More</a></div>
+</article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
                         <a href="/">1</a>
                     </span>
-                </li><li class="page-item ">
+                </li><li class="page-item active">
                     <span class="page-link">
                         <a href="/page/2/">2</a>
                     </span>

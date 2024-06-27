@@ -2,8 +2,9 @@
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
     ><url>
-            <loc>https://scratchadams.github.io/</loc><lastmod>2024-06-27T16:23:02-04:00</lastmod></url><url>
-            <loc>https://scratchadams.github.io/posts/</loc><lastmod>2024-06-27T16:23:02-04:00</lastmod></url><url>
+            <loc>https://scratchadams.github.io/posts/cve-2018-1160/</loc><lastmod>2024-06-27T18:07:05-04:00</lastmod></url><url>
+            <loc>https://scratchadams.github.io/</loc><lastmod>2024-06-27T18:07:05-04:00</lastmod></url><url>
+            <loc>https://scratchadams.github.io/posts/</loc><lastmod>2024-06-27T18:07:05-04:00</lastmod></url><url>
             <loc>https://scratchadams.github.io/posts/qemu-escape-ctf/</loc><lastmod>2024-06-27T16:23:02-04:00</lastmod></url><url>
             <loc>https://scratchadams.github.io/posts/cve-2021-33913/</loc><lastmod>2024-06-27T16:13:33-04:00</lastmod></url><url>
             <loc>https://scratchadams.github.io/posts/heap3/</loc><lastmod>2024-06-27T15:34:45-04:00</lastmod></url><url>
