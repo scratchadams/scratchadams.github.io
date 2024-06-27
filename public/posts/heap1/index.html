@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Everything In It&#39;s Right Place - hypblog</title><meta name="Description" content="hyplog"><meta property="og:title" content="Everything In It&#39;s Right Place" />
+<meta property="og:description" content="Exploring Memory allocation, vulnerabilities, and exploitation" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://scratchadams.github.io/posts/heap1/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-06-27T10:19:21-04:00" />
+<meta property="article:modified_time" content="2024-06-27T10:19:21-04:00" /><meta property="og:site_name" content="hyplog" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Everything In It&#39;s Right Place"/>
+<meta name="twitter:description" content="Exploring Memory allocation, vulnerabilities, and exploitation"/>
+<meta name="application-name" content="hyplog">
+<meta name="apple-mobile-web-app-title" content="hyplog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://scratchadams.github.io/posts/heap1/" /><link rel="prev" href="https://scratchadams.github.io/posts/bggp5/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Everything In It's Right Place",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/scratchadams.github.io\/posts\/heap1\/"
+        },"genre": "posts","wordcount":  2227 ,
+        "url": "https:\/\/scratchadams.github.io\/posts\/heap1\/","datePublished": "2024-06-27T10:19:21-04:00","dateModified": "2024-06-27T10:19:21-04:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "hyp"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="hypblog">hyplog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="hypblog">hyplog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Everything In It's Right Place</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-27">2024-06-27</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2227 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;11 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><h1 id="everything-in-its-right-place">Everything In It&rsquo;s Right Place</h1>
+<p><strong>Exploring Memory allocation, vulnerabilities, and exploitation</strong></p>
+<p>To better understand memory management and exploitation, I thought it would be interesting to build a simple malloc implementation and test some common heap exploitation techniques against it. I hope to treat this write up as the first in a series of articles where I will add functionality and mitigations to my memory allocator and explore different types of vulnerabilities and exploitation techniques. In this first article, I will walk through my initial malloc()/free() implementation, and will also demonstrate how we can use a heap overflow vulnerability to overwrite a function pointer and hijack execution.</p>
+<h1 id="allocation">Allocation</h1>
+<p>Essentially <strong>mmalloc()</strong> works by requesting chunks of memory from the kernel using the <strong>sbrk()</strong> system call and storing some header information directly before the area of writeable memory that the function returns. In order to compensate for the extra overhead needed for this header, <strong>mmalloc()</strong> adds the size of the header structure (24 bytes in this case) to the size value passed to <strong>sbrk()</strong>. The header structure is declared as follows:</p>
+<pre tabindex="0"><code>struct chunk_data {  
+    size_t size;  
+    struct chunk_data *next;  
+    int free;  
+    int magic;  
+};
+</code></pre><p><strong>size</strong> — this field is used to store the size of the allocated chunk of memory (this does not include the header)</p>
+<p><strong>next</strong> — this field is used to store a pointer to the next allocated chunk of memory which creates a linked list that is used by the <strong>mmalloc()</strong> function to enumerate through allocated chunks. This field will be NULL for the last allocated chunk, indicating the end of the linked list.</p>
+<p><strong>free</strong> — this field is used to determine if a chunk has been freed. If it is set to 0, then the chunk is in use and otherwise the chunk is free to be re-used by <strong>mmalloc()</strong>.</p>
+<p><strong>magic</strong> — this is used for debugging and troubleshooting purposes, unnecessary for the actual functionality of <strong>mmalloc()</strong>.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_OpJKqcr9HBdSBoH8fIoUZQ.png"
+        data-srcset="/images/1_OpJKqcr9HBdSBoH8fIoUZQ.png, /images/1_OpJKqcr9HBdSBoH8fIoUZQ.png 1.5x, /images/1_OpJKqcr9HBdSBoH8fIoUZQ.png 2x"
+        data-sizes="auto"
+        alt="/images/1_OpJKqcr9HBdSBoH8fIoUZQ.png"
+        title="/images/1_OpJKqcr9HBdSBoH8fIoUZQ.png" /></p>
+<p>Let’s take a look at exactly how this is implemented. When a call is made to <strong>mmalloc()</strong>, the first thing that takes place is a check of a global variable called <strong>global_base</strong>. The purpose of this variable is to keep track of the location in memory associated with the first allocated chunk.</p>
+<pre tabindex="0"><code>if(!global_base) {  
+    chunk = req_space(NULL, size);    if(!chunk) {  
+        return NULL;  
+    }  
+    global_base = chunk;} else {
+</code></pre><p>As we can see, if the <strong>global_base</strong> variable has not been set, then a call is made to <strong>req_space()</strong>. if the call to <strong>req_space()</strong> is successful, the <strong>global_base</strong> variable is set to its return value.</p>
+<p>We will revisit the specifics of the <strong>global_base</strong> later in this article, but it is important to know that this variable is used to determine the head of the linked list of allocated chunks that will be used by <strong>mmalloc()</strong> to determine if any freed chunks can be reused.</p>
+<p>Next we will take a look at the <strong>req_space()</strong> function to understand what it is doing. <strong>req_space()</strong> acts as an interface for the <strong>sbrk()</strong> system call. As described in the <strong>sbrk()</strong> man page:</p>
+<p>brk() and sbrk() change the location of the program break, which defines the end of the process&rsquo;s data segment (i.e., the program break is the first location after the end of the uninitialized data segment). Increasing the program break has the effect of allocating memory to the process; decreasing the break deallocates memory.</p>
+<p><strong>req_space()</strong> is a fairly small and straightforward function, so let’s take a look at it in its entirety:</p>
+<pre tabindex="0"><code>struct chunk_data *req_space(struct chunk_data *last, size_t size) {  
+    struct chunk_data *chunk;  
+    chunk = sbrk(0);    void *req = sbrk(size + CHUNK_SZ);  
+    assert((void*)chunk == req);    if(req == (void*)-1) {  
+        return NULL;  
+    }   if(last) {  
+        last-&gt;next = chunk;  
+    }   chunk-&gt;size = size;  
+    chunk-&gt;next = NULL;  
+    chunk-&gt;free = 0;  
+    chunk-&gt;magic = 0x12345678;  return chunk;  
+}
+</code></pre><p>After <strong>req_space()</strong> is called, a new chunk header structure is created and set to <strong>sbrk(0)</strong>. The <strong>sbrk()</strong> man page indicates the following behavior when calling <strong>sbrk()</strong> with a value of 0:</p>
+<p>Calling sbrk() with an increment of 0 can be used to find the current location of the program break.</p>
+<p>Next another call is made to <strong>sbrk()</strong> for the requested size of memory in bytes, plus the header size to compensate for the space needed to store the header.</p>
+<p>After this, the value of chunk is compared to the value of <strong>req</strong>, as well as -1, to ensure that the request for memory returned successfully.</p>
+<p>If these checks pass, then the <strong>last</strong> variable is checked, of this variable is set to an address, this indicates that other chunks have been allocated already and adjusts the <strong>next</strong> variable of the last chunk to point to the newly allocated chunk of memory. We will discuss the linked list of chunks in more detail later in the article.</p>
+<p>Finally, the chunk’s header variables are set and the chunk structure is returned.</p>
+<p>Looking back at the <strong>mmalloc()</strong> function, let’s see what happens when it is called and <strong>global_base</strong> has already been initialized.</p>
+<pre tabindex="0"><code>} else {  
+    struct chunk_data *last = global_base;  
+    chunk = find_free_chunk(&amp;last, size);    if(!chunk) {  
+        chunk = req_space(last, size);        if(!chunk) {  
+            return NULL;  
+        }  
+    } else {  
+        chunk-&gt;free = 0;  
+        chunk-&gt;magic = 0x87654321;  
+    }  
+}
+</code></pre><p>As we can see above, if the <strong>global_base</strong> value is not set to NULL, then we create a new <strong>chunk_data</strong> struct called last which is set to the value of <strong>global_base</strong>. We then call the function <strong>find_free_chunk()</strong> and pass the last variable along with the requested size. The <strong>find_free_chunk()</strong> function is used to enumerate through the linked list of previously allocated chunks and determine if any of them have been freed and meet the size requirements for the currently requested allocation. The function is defined as follows:</p>
+<pre tabindex="0"><code>struct chunk_data *find_free_chunk(struct chunk_data **last, size_t size) {  
+    struct chunk_data *current = global_base;   while(current &amp;&amp; !(current-&gt;free &amp;&amp; current-&gt;size &gt;= size)) {  
+        *last = current;  
+        current = current-&gt;next;  
+    }   return current;  
+}
+</code></pre><p><strong>find_free_chunk()</strong> always returns a pointer for the <strong>chunk_data</strong> structure, but if it enumerates through the list of allocated chunks and is unable to find one that has been freed and meets the size requirements, then the variable <strong>current-&gt;next</strong> will actually be set to NULL, meaning that the return value of <strong>find_free_chunk()</strong> will also be NULL. In this case, <strong>req_space()</strong> will be called to request more memory from the kernel.</p>
+<p>To better understand how this works, let’s take a look at a visual representation of a few allocated chunks in memory:</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_m5obXUuJdHXjgYLIdPkU7w.png"
+        data-srcset="/images/1_m5obXUuJdHXjgYLIdPkU7w.png, /images/1_m5obXUuJdHXjgYLIdPkU7w.png 1.5x, /images/1_m5obXUuJdHXjgYLIdPkU7w.png 2x"
+        data-sizes="auto"
+        alt="/images/1_m5obXUuJdHXjgYLIdPkU7w.png"
+        title="/images/1_m5obXUuJdHXjgYLIdPkU7w.png" /></p>
+<p>In the visual above, we can see that 3 separate chunks have been allocated. During this process, the <strong>next</strong> header field in the first two chunks are set to point to where the next chunk begins, which builds the list that <strong>find_free_chunks()</strong> will use to enumerate through these allocated chunks.</p>
+<p>To put this to the test, we will make two separate calls to <strong>mmalloc()</strong>, fill the space returned with easily identifiable values, and then take a look at those regions of memory using GDB. The code should look as follows:</p>
+<pre tabindex="0"><code>void *test1, *test2;test1 = mmalloc(24);  
+test2 = mmalloc(32);memset(test1, 0x42, 24);  
+memset(test2, 0x43, 32);
+</code></pre><p>Let’s take a look at how these allocated chunks look in GDB, and how the output maps to our visual from earlier.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_mei-TZPOj_z4M8yhv-r5Ew.png"
+        data-srcset="/images/1_mei-TZPOj_z4M8yhv-r5Ew.png, /images/1_mei-TZPOj_z4M8yhv-r5Ew.png 1.5x, /images/1_mei-TZPOj_z4M8yhv-r5Ew.png 2x"
+        data-sizes="auto"
+        alt="/images/1_mei-TZPOj_z4M8yhv-r5Ew.png"
+        title="/images/1_mei-TZPOj_z4M8yhv-r5Ew.png" /></p>
+<h1 id="freeing-and-reusing-chunks">Freeing and reusing chunks</h1>
+<p>Freeing a chunk in this implementation is very simple. We essentially just set the <strong>free</strong> field in the header of the associated chunk to 1.</p>
+<pre tabindex="0"><code>int mfree(struct chunk_data *chunk) {  
+    if(!chunk) {  
+        return -1;  
+    }   struct chunk_data *ptr = get_chunk_ptr(chunk);  ptr-&gt;free = 1;  
+    ptr-&gt;magic = 0xFFFFFFFF;    return 0;  
+}
+</code></pre><p>One other thing to notice in the <strong>mfree()</strong> function is the call to <strong>get_chunk_ptr()</strong>. Since <strong>mmalloc()</strong> actually returns the address of the useable memory area and not the header, we need a way of calculating the start of the header from that returned address. <strong>get_chunk_ptr()</strong> does this by simply taking the address as a struct <strong>chunk_data</strong> pointer and returning that minus 1, as we can see below.</p>
+<pre tabindex="0"><code>struct chunk_data *get_chunk_ptr(struct chunk_data *ptr) {  
+    if(!ptr) {   
+        return NULL;  
+    }    return (ptr-1);  
+}
+</code></pre><p>In this case, <strong>(ptr-1)</strong> is relative to the size of struct <strong>chunk_data</strong>, which means the returned value will point directly to the beginning of the chunk’s header. We also set the <strong>magic</strong> field for this chunk to 0xFFFFFFFF as it is easily identifiable when looking at memory.</p>
+<p>To see how a freed chunk gets reused, we have to take another look at the <strong>find_free_chunk()</strong> function.</p>
+<pre tabindex="0"><code>while(current &amp;&amp; !(current-&gt;free &amp;&amp; current-&gt;size &gt;= size)) {  
+    printf(&#34;current: %p next: %p\n&#34;, current, current-&gt;next);  
+    *last = current;  
+    current = current-&gt;next;  
+}return current;
+</code></pre><p>We can see that this function enumerates through a list of chunks, based on the conditions that current is not NULL, <strong>current-&gt;free</strong> is not NULL, and <strong>current-&gt;size</strong> is either equal to or greater than the requested size. If all of these conditions are met, then the while loop ends and the address of the current chunk is returned to <strong>mmalloc()</strong> for reuse.</p>
+<h1 id="vulnerability">Vulnerability</h1>
+<p>Now that we understand how this basic memory allocator works, let’s talk about an inherent vulnerability and how it can be exploited. Specifically, we will be looking at causing a heap overflow to overwrite header fields in an adjacent chunk.</p>
+<p>To demonstrate this vulnerability, let’s first allocate and populate some chunks as we did earlier.</p>
+<pre tabindex="0"><code>
+void *test1, *test2, *test3;test1 = mmalloc(24);  
+test2 = mmalloc(24);  
+test3 = mmalloc(32);memset(test1, 0x41, 24);  
+memset(test2, 0x42, 24);  
+memset(test3, 0x43, 32);
+</code></pre><p>Next we will call <strong>memset()</strong> to set 32 bytes of memory starting at the location returned to test2 as follows.</p>
+<pre tabindex="0"><code>memset(test2, 0x44, 32);
+</code></pre><p>At this point, since there are no implicit checks on the amount of memory allocated for <strong>test2</strong>, the call to <strong>memset()</strong> writes past the memory region allocated for <strong>test2</strong> and into the header of <strong>test3</strong>.</p>
+<p>If we take a look at these memory regions before and after the previous <strong>memset()</strong> call, we can see how these fields get overwritten.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_Q9kvd366XTIFaLxiaftxYA.png"
+        data-srcset="/images/1_Q9kvd366XTIFaLxiaftxYA.png, /images/1_Q9kvd366XTIFaLxiaftxYA.png 1.5x, /images/1_Q9kvd366XTIFaLxiaftxYA.png 2x"
+        data-sizes="auto"
+        alt="/images/1_Q9kvd366XTIFaLxiaftxYA.png"
+        title="/images/1_Q9kvd366XTIFaLxiaftxYA.png" /></p>
+<p>In the above image, we can see that the <strong>size</strong> field for <strong>test2</strong> is located at 0x55555557b000 and the <strong>size</strong> field for test3 is located at 0x55555557b030. If we take a look at this same memory region after the call to <strong>memset()</strong>, we can see that the <strong>size</strong> field for <strong>test3</strong> located at 0x55555557b030 has now been completely overwritten by the value we passed along in the call (0x44).</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_Vy0tbF-fdb7IsLSQ1hDaaA.png"
+        data-srcset="/images/1_Vy0tbF-fdb7IsLSQ1hDaaA.png, /images/1_Vy0tbF-fdb7IsLSQ1hDaaA.png 1.5x, /images/1_Vy0tbF-fdb7IsLSQ1hDaaA.png 2x"
+        data-sizes="auto"
+        alt="/images/1_Vy0tbF-fdb7IsLSQ1hDaaA.png"
+        title="/images/1_Vy0tbF-fdb7IsLSQ1hDaaA.png" /></p>
+<h1 id="exploitation">Exploitation</h1>
+<p>Now that we understand how an allocated chunk can easily be overflowed and an adjacent chunk can be overwritten, let’s take a look at an example of how this could possibly be exploited.</p>
+<p>For our example, we will create two simple functions named <strong>good_print()</strong> and <strong>bad_print()</strong>.</p>
+<pre tabindex="0"><code>int good_print() {  
+    printf(&#34;This should be printed!\n&#34;);    return 0;  
+}int bad_print() {  
+    printf(&#34;This should NOT be printed!\n&#34;);    return 0;  
+}
+</code></pre><p>We will then add these two functions to a jump table.</p>
+<pre tabindex="0"><code>typedef int print_func();print_func *jmp_table[2] = {  
+    good_print,  
+    bad_print  
+};
+</code></pre><p>We will mimic the calls to <strong>mmalloc()</strong> and <strong>memset()</strong> as we had before when demonstrating the overflow.</p>
+<pre tabindex="0"><code>void *test1, *test2, *test3;test1 = mmalloc(24);  
+test2 = mmalloc(24);  
+test3 = mmalloc(32);memset(test1, 0x41, 24);  
+memset(test2, 0x42, 24);  
+memset(test3, 0x43, 32);memset(test2, 0x44, 32);
+</code></pre><p>Finally we will call the <strong>good_print()</strong> function using the jump table we created.</p>
+<pre tabindex="0"><code>jmp_table[0]();
+</code></pre><p>At this point we have recreated the conditions of the previously described overflow and have also added the functions in the jump table as a possible target for our exploit. Running this program now would execute without any noticeable errors as we are only overwriting the the <strong>size</strong> field of <strong>test3</strong>, which will have no impact to the way this program currently functions.</p>
+<p>To actually exploit this vulnerability, what we will do is continue to write into <strong>test3</strong>’s header to the point that the <strong>next</strong> field is overwritten. Overwriting this specific field is important, as the next time <strong>mmalloc()</strong> is called, it will read this value as the next available chunk and return that address for the process to use.</p>
+<p>Looking at the disassembled main function for our vulnerable program, we can see where the function pointer get’s copied into the RDX register and then executed.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1__LNoz4xhPUmfQIIboOfUXA.png"
+        data-srcset="/images/1__LNoz4xhPUmfQIIboOfUXA.png, /images/1__LNoz4xhPUmfQIIboOfUXA.png 1.5x, /images/1__LNoz4xhPUmfQIIboOfUXA.png 2x"
+        data-sizes="auto"
+        alt="/images/1__LNoz4xhPUmfQIIboOfUXA.png"
+        title="/images/1__LNoz4xhPUmfQIIboOfUXA.png" /></p>
+<p>We can confirm this by setting a breakpoint at *<strong>main+307</strong> and inspecting the memory at <strong>rbp-0x30</strong>.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_5czgPxMn1SaG-kInAYss1Q.png"
+        data-srcset="/images/1_5czgPxMn1SaG-kInAYss1Q.png, /images/1_5czgPxMn1SaG-kInAYss1Q.png 1.5x, /images/1_5czgPxMn1SaG-kInAYss1Q.png 2x"
+        data-sizes="auto"
+        alt="/images/1_5czgPxMn1SaG-kInAYss1Q.png"
+        title="/images/1_5czgPxMn1SaG-kInAYss1Q.png" /></p>
+<p>Here we can see that the values located at 0x7fffffffe440 and 0x7fffffffe448 correspond to the <strong>good_print()</strong> and <strong>bad_print()</strong> function pointers in our jump table.</p>
+<p>So now that we see how the <strong>good_print()</strong> function is being called, we can use that information to overwrite the pointer to <strong>good_print()</strong> with the value of <strong>bad_print()</strong>.</p>
+<p>To make this happen, we will overwrite the <strong>next</strong> field in <strong>test3</strong> with the pointer to <strong>good_print()</strong> minus the size of the header data, which in this case would be</p>
+<pre tabindex="0"><code>0x7fffffffe440 - 0x18 = 0x7fffffffe428
+</code></pre><p>Then we will make another call to <strong>mmalloc()</strong> and copy the memory of <strong>bad_print()</strong> (0x555555555560) to the associated variable as such.</p>
+<pre tabindex="0"><code>functest = mmalloc(24);  
+strcpy(functest, &#34;\x60\x55\x55\x55\x55\x55&#34;);
+</code></pre><p>At this point, our example should look as follows</p>
+<pre tabindex="0"><code>void *test1, *test2, *test3;test1 = mmalloc(24);  
+test2 = mmalloc(24);  
+test3 = mmalloc(32);memset(test1, 0x41, 24);  
+memset(test2, 0x42, 24);  
+memset(test3, 0x43, 32);memset(test2, 0x44, 32);  
+strcpy((test2+32), &#34;\x28\xe4\xff\xff\xff\x7f&#34;);functest = mmalloc(24);  
+strcpy(functest, &#34;\x60\x55\x55\x55\x55\x55&#34;);jmp_table[0]();
+</code></pre><p>Running the above example will successfully overwrite the pointer to <strong>good_print()</strong> with the address of <strong>bad_print()</strong> and execute <strong>bad_print()</strong> when the call to <strong>jmp_table<a href="" rel="">0</a>;</strong> takes place.</p>
+<h1 id="wrap-up">Wrap up</h1>
+<p>Hopefully this writeup was useful for showing the basics of memory allocation and how heap overflows can be used to exploit programs in certain circumstances. Please look out for future articles in this series as I explore adding additional functionality and testing different vulnerabilities and exploitation techniques.</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-06-27</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://scratchadams.github.io/posts/heap1/" data-title="Everything In It&#39;s Right Place"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://scratchadams.github.io/posts/heap1/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://scratchadams.github.io/posts/heap1/" data-title="Everything In It&#39;s Right Place"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://scratchadams.github.io/posts/heap1/" data-title="Everything In It&#39;s Right Place"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://scratchadams.github.io/posts/heap1/" data-title="Everything In It&#39;s Right Place"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/bggp5/" class="prev" rel="prev" title="bggp5"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>bggp5</a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.113.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
