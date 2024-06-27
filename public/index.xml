@@ -3,9 +3,17 @@
         <title>hypblog</title>
         <link>https://scratchadams.github.io/</link>
         <description>hyplog</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 27 Jun 2024 10:19:21 -0400</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 27 Jun 2024 14:35:11 -0400</lastBuildDate>
             <atom:link href="https://scratchadams.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>Everything In Its Right Place: Pt 2</title>
+    <link>https://scratchadams.github.io/posts/heap2/</link>
+    <pubDate>Thu, 27 Jun 2024 14:35:11 -0400</pubDate>
+    <author>hyp</author>
+    <guid>https://scratchadams.github.io/posts/heap2/</guid>
+    <description><![CDATA[Exploring Memory allocation, vulnerabilities, and exploitation]]></description>
+</item>
+<item>
     <title>Everything In It&#39;s Right Place</title>
     <link>https://scratchadams.github.io/posts/heap1/</link>
     <pubDate>Thu, 27 Jun 2024 10:19:21 -0400</pubDate>
