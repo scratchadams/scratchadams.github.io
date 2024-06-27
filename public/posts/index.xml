@@ -3,7 +3,23 @@
         <title>All Posts - hypblog</title>
         <link>https://scratchadams.github.io/posts/</link>
         <description>All Posts | hypblog</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 27 Jun 2024 14:35:11 -0400</lastBuildDate><atom:link href="https://scratchadams.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 27 Jun 2024 16:13:33 -0400</lastBuildDate><atom:link href="https://scratchadams.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>CVE-2021-33913</title>
+    <link>https://scratchadams.github.io/posts/cve-2021-33913/</link>
+    <pubDate>Thu, 27 Jun 2024 16:13:33 -0400</pubDate>
+    <author>hyp</author>
+    <guid>https://scratchadams.github.io/posts/cve-2021-33913/</guid>
+    <description><![CDATA[CVE-2021–33913 Analysis CVE-2021–33913 is a heap-based buffer overflow that takes place in the SPF macro expansion process of the open source SPF library libspf2. According to the website, libspf2 is used by systems such as Sendmail, Postfix, Exim, Zmailer, and MS Exchange. This vulnerability was discovered along with CVE-2021–33912 by security researcher Nathaniel Bennett, who provided some details in a blog post: https://nathanielbennett.com/blog/libspf2-cve-jan-2022-disclosure along with a patch to fix both issues: https://github.]]></description>
+</item>
+<item>
+    <title>Everything In Its Right Place: Pt3</title>
+    <link>https://scratchadams.github.io/posts/heap3/</link>
+    <pubDate>Thu, 27 Jun 2024 15:34:45 -0400</pubDate>
+    <author>hyp</author>
+    <guid>https://scratchadams.github.io/posts/heap3/</guid>
+    <description><![CDATA[Exploring Memory allocation, vulnerabilities, and exploitation]]></description>
+</item>
+<item>
     <title>Everything In Its Right Place: Pt 2</title>
     <link>https://scratchadams.github.io/posts/heap2/</link>
     <pubDate>Thu, 27 Jun 2024 14:35:11 -0400</pubDate>
