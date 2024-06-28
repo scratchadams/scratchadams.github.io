@@ -3,9 +3,18 @@
         <title>hypblog</title>
         <link>https://scratchadams.github.io/</link>
         <description>hyplog</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 28 Jun 2024 08:44:11 -0400</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 28 Jun 2024 08:54:21 -0400</lastBuildDate>
             <atom:link href="https://scratchadams.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>Bggp3</title>
+    <link>https://scratchadams.github.io/posts/bggp3/</link>
+    <pubDate>Fri, 28 Jun 2024 08:54:21 -0400</pubDate>
+    <author>hyp</author>
+    <guid>https://scratchadams.github.io/posts/bggp3/</guid>
+    <description><![CDATA[Crashing munpack for BGGP3 BGGP3 The goal of this year’s BGGP is to ‘find the smallest file which will crash a specific program’. I liked the idea of this challenge as it seemed both interesting and approachable. After reading through the challenge rules and examples: https://tmpout.sh/bggp/3/ I decided to look for a good target to start fuzzing.
+Target My first target was tshark, I figured this would be good to target as I had recently done some work modifying the wireshark source code and had some idea of how it worked.]]></description>
+</item>
+<item>
     <title>Reverse Engineering Binary Protocols to Create IPS Signatures</title>
     <link>https://scratchadams.github.io/posts/ips-signatures/</link>
     <pubDate>Fri, 28 Jun 2024 08:44:11 -0400</pubDate>

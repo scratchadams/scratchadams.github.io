@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Bggp3 - hypblog</title><meta name="Description" content="hyplog"><meta property="og:title" content="Bggp3" />
+<meta property="og:description" content="Crashing munpack for BGGP3 BGGP3 The goal of this year’s BGGP is to ‘find the smallest file which will crash a specific program’. I liked the idea of this challenge as it seemed both interesting and approachable. After reading through the challenge rules and examples: https://tmpout.sh/bggp/3/ I decided to look for a good target to start fuzzing.
+Target My first target was tshark, I figured this would be good to target as I had recently done some work modifying the wireshark source code and had some idea of how it worked." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://scratchadams.github.io/posts/bggp3/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-06-28T08:54:21-04:00" />
+<meta property="article:modified_time" content="2024-06-28T08:54:21-04:00" /><meta property="og:site_name" content="hyplog" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Bggp3"/>
+<meta name="twitter:description" content="Crashing munpack for BGGP3 BGGP3 The goal of this year’s BGGP is to ‘find the smallest file which will crash a specific program’. I liked the idea of this challenge as it seemed both interesting and approachable. After reading through the challenge rules and examples: https://tmpout.sh/bggp/3/ I decided to look for a good target to start fuzzing.
+Target My first target was tshark, I figured this would be good to target as I had recently done some work modifying the wireshark source code and had some idea of how it worked."/>
+<meta name="application-name" content="hyplog">
+<meta name="apple-mobile-web-app-title" content="hyplog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://scratchadams.github.io/posts/bggp3/" /><link rel="prev" href="https://scratchadams.github.io/posts/ips-signatures/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Bggp3",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/scratchadams.github.io\/posts\/bggp3\/"
+        },"genre": "posts","wordcount":  1250 ,
+        "url": "https:\/\/scratchadams.github.io\/posts\/bggp3\/","datePublished": "2024-06-28T08:54:21-04:00","dateModified": "2024-06-28T08:54:21-04:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "hyp"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="hypblog">hyplog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="hypblog">hyplog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Bggp3</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-28">2024-06-28</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1250 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;6 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><h1 id="crashing-munpack-for-bggp3">Crashing munpack for BGGP3</h1>
+<h1 id="bggp3">BGGP3</h1>
+<p>The goal of this year’s BGGP is to ‘find the smallest file which will crash a specific program’. I liked the idea of this challenge as it seemed both interesting and approachable. After reading through the challenge rules and examples: <a href="https://tmpout.sh/bggp/3/" target="_blank" rel="noopener noreffer ">https://tmpout.sh/bggp/3/</a> I decided to look for a good target to start fuzzing.</p>
+<h1 id="target">Target</h1>
+<p>My first target was tshark, I figured this would be good to target as I had recently done some work modifying the wireshark source code and had some idea of how it worked. I also figured there was a lot of parsing going on due to the large number of protocols and file types supported by wireshark. Honestly, I only spent a day working on this target and was not getting very far. I decided to look for some other targets, ideally that involved a lot of parsing from a common filetype, and that is when I stumbled upon munpack: <a href="https://linux.die.net/man/1/munpack" target="_blank" rel="noopener noreffer ">https://linux.die.net/man/1/munpack</a>.</p>
+<h1 id="start-fuzzing">Start Fuzzing</h1>
+<p>Munpack is a program that reads email files, extracts any attachments (well technicially only the first attachment it encounters) and writes a copy of the attachment to disk. To start fuzzing munpack, I needed to find some sample .eml files. I was able to find this git repository that contained a number of .eml samples: <a href="https://github.com/mikel/mail/blob/master/spec/fixtures/emails/" target="_blank" rel="noopener noreffer ">https://github.com/mikel/mail/blob/master/spec/fixtures/emails/</a></p>
+<p>I cloned the git repository, copied a number of the samples over to a new directory, and fired up honggfuzz with the following command:</p>
+<p>honggfuzz -i samples -x — /usr/bin/munpack <em><strong>FILE</strong></em></p>
+<p>To my surprise, this had triggered a crash in under 10 seconds of run time. I let the fuzzer continue a little longer, the crashes were increasing every few seconds, but only one of them was unique. I decided to stop fuzzing at this point and take a look at the file that generated the crash.</p>
+<p>The munpack binary provided by apt was stripped, so I downloaded the source and compiled it manually, and tested the crash again which produced the same result.</p>
+<h1 id="crash">Crash</h1>
+<p>After taking a look at the GDB output of this crash, I could see that it was caused due to a buffer overflow in a call to sprintf from a function named os_newfiletype. I could also see that the format string passed to sprintf was “%s.%d” which helped narrow down which sprintf call was causing this overflow (there were a few calls to sprintf, and some that were also vulnerable to similar overflows).</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/0_LP-S4wRgLo5KY1BJ.png"
+        data-srcset="/images/0_LP-S4wRgLo5KY1BJ.png, /images/0_LP-S4wRgLo5KY1BJ.png 1.5x, /images/0_LP-S4wRgLo5KY1BJ.png 2x"
+        data-sizes="auto"
+        alt="/images/0_LP-S4wRgLo5KY1BJ.png"
+        title="/images/0_LP-S4wRgLo5KY1BJ.png" /></p>
+<p>Looking for that particular format string in the os_newfiletype function, I found the call to sprintf that was overflowing:</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/0_58exxtH3sbk_P01M.png"
+        data-srcset="/images/0_58exxtH3sbk_P01M.png, /images/0_58exxtH3sbk_P01M.png 1.5x, /images/0_58exxtH3sbk_P01M.png 2x"
+        data-sizes="auto"
+        alt="/images/0_58exxtH3sbk_P01M.png"
+        title="/images/0_58exxtH3sbk_P01M.png" /></p>
+<p>Looking at this section of code, we can see this call to sprintf only happens when the overwrite_files flag is not set, and if the call to fopen(fname, “r”) is successful, indicating that the file it is attempting to open exists. If both of these cases are met, then the original filename, fname, is concatenated with a file suffix.</p>
+<p>The purpose for this code is to prevent files of the same name from being overwritten during the email attachment extraction process, but the problem with this particular call to sprintf is there is no check to see if the size of fname is greater than what buf can handle. Earlier in this function, buf is declared with a static size of 128 bytes.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/0_FOZSMFrQzC__RAlE.png"
+        data-srcset="/images/0_FOZSMFrQzC__RAlE.png, /images/0_FOZSMFrQzC__RAlE.png 1.5x, /images/0_FOZSMFrQzC__RAlE.png 2x"
+        data-sizes="auto"
+        alt="/images/0_FOZSMFrQzC__RAlE.png"
+        title="/images/0_FOZSMFrQzC__RAlE.png" /></p>
+<p>I checked to see what the maximum filename size is on linux, and apparently a filename can be up to 255 characters long (4096 characters when including the path), which is plenty of characters to overflow the 128 byte buffer.</p>
+<h1 id="reduce-file-size">Reduce File Size</h1>
+<p>Ok, so at this point I have a file that causes a crash due to a buffer overflow in the filename extracted from an .eml file, but the file itself is rather large.</p>
+<pre tabindex="0"><code>root@mern:~# ls -alh big.eml  
+-rw-r--r-- 1 root root 645 Jul 19 19:41 big.eml  
+root@mern:~# cat big.eml  
+Subject: this message JUST contains an attachment  
+From: Test Test &lt;test@domain.dom&gt;  
+To: othertest@domain.dom  
+Content-Disposition: attachment; filename=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#34;\  
+Content-Transfer-Encoding: base64  
+Content-Description: Attachment has identical content to above foo.gz  
+Message-Id: &lt;blah@localhost&gt;  
+Mime-Version: 1.0  
+Date: 23 Oct 2003 22:40:49 -0700  
+Content-Type: text/plain;name=&#34;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#34;blahblahblahblahblah
+</code></pre><p>To reduce the size of the input file, I decided to take a look at the code again and see exactly how the attachments are identified and extracted.</p>
+<p>Taking a closer look at the source, I could see that the input file gets read into a structure which gets passed along to a function named handleMessage. That function immediatly calls another function named ParseHeaders, which as the name implies, parses the file looking for different header fields and sets corresponding variables when it encounters those fields.</p>
+<p>One of the fields that gets parsed during this process is Content-Type, which as we can see from the example above is set to ‘text/plain’. This content type gets passed along to a function named saveToFile to handle the attachment extraction.</p>
+<p>So now that I could see the Content-Type field is what triggers the call to saveToFile, and the length of the filename is what triggers the actual overflow, I decided to strip out all other text from the test file, aside from the content-type and file name, which leaves me with this:</p>
+<pre tabindex="0"><code>Content-Type:text/plain;name=&#34;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#34;
+</code></pre><p>I ran this stripped file through munpack, and to my delight it caused the same crash. So now I have a 158 byte file, which is not super small, but at least it is something.</p>
+<h1 id="hijacking-execution">Hijacking Execution</h1>
+<p>Now that I have a working crash and a reduced file, I attempted to see if I would be able to hijack execution.</p>
+<p>Looking at the output generated from the crash, we can see that the program is terminated due to buffer overflow detection.</p>
+<pre tabindex="0"><code>root@mern:~/mpack-1.6# munpack ~/final.eml  
+*** buffer overflow detected ***: terminated  
+Aborted (core dumped)
+</code></pre><p>It seems that some sort of protection is preventing this overflow from being useful, and looking at the GDB output of this crash gives us a hint.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/0_tewNjp2mCnC66JVd.png"
+        data-srcset="/images/0_tewNjp2mCnC66JVd.png, /images/0_tewNjp2mCnC66JVd.png 1.5x, /images/0_tewNjp2mCnC66JVd.png 2x"
+        data-sizes="auto"
+        alt="/images/0_tewNjp2mCnC66JVd.png"
+        title="/images/0_tewNjp2mCnC66JVd.png" /></p>
+<p>We can see in the above output that sprintf actually calls another function __sprintf_chk which eventually calls _IO_str_chk_overflow. I decided to look into these functions to see if I could get an idea of what is going on here.</p>
+<p>The documentation indicates the following about __sprintf_chk</p>
+<p>&ldquo;The interface __sprintf_chk() shall function in the same way as the interface sprintf(), except that __sprintf_chk() shall check for stack overflow before computing a result, depending on the value of the flag parameter. If an overflow is anticipated, the function shall abort and the program calling it shall exit.&rdquo;</p>
+<p>Based on this description, I decided to take a look at this crash after disabling some of the stack protections. I recompiled munpack adding the following compiler flags:</p>
+<pre tabindex="0"><code>-fno-stack-protector -D_FORTIFY_SOURCE=0
+</code></pre><p>Initially the file I was using to crash munpack did not cause a crash after disabling these protections, but after increasing the file name size in the file, I was able to overwrite enough of the stack to overwrite multiple registers, including $rip.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/0_Ak1q4gHiN2PekzJD.png"
+        data-srcset="/images/0_Ak1q4gHiN2PekzJD.png, /images/0_Ak1q4gHiN2PekzJD.png 1.5x, /images/0_Ak1q4gHiN2PekzJD.png 2x"
+        data-sizes="auto"
+        alt="/images/0_Ak1q4gHiN2PekzJD.png"
+        title="/images/0_Ak1q4gHiN2PekzJD.png" /></p>
+<p>Unfortunately, I was unable to completely hijack execution through this overflow as munpack performs some sanitation on the filename before attempting to write it. I have to imagine there are ways to utilize this overflow to hijack execution, but I was unable to figure it out for myself.</p>
+<h1 id="points">Points</h1>
+<p>File Size: 4096–158 = 3938</p>
+<p>Writeup: 3938 + 1024 = 4962</p>
+<p>Total: 4962</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>While the other examples of entries I have seen are more interesting than my findings, I was still happy to participate in this challenge and definitely learned a few things along the way.</p>
+<p>Check out these other related write ups:</p>
+<p><a href="https://ortiz.sh/identity/2022/07/17/BGGP3.html" target="_blank" rel="noopener noreffer ">https://ortiz.sh/identity/2022/07/17/BGGP3.html</a></p>
+<p><a href="https://remyhax.xyz/posts/bggp3-cob/" target="_blank" rel="noopener noreffer ">https://remyhax.xyz/posts/bggp3-cob/</a></p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-06-28</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://scratchadams.github.io/posts/bggp3/" data-title="Bggp3"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://scratchadams.github.io/posts/bggp3/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://scratchadams.github.io/posts/bggp3/" data-title="Bggp3"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://scratchadams.github.io/posts/bggp3/" data-title="Bggp3"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://scratchadams.github.io/posts/bggp3/" data-title="Bggp3"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/ips-signatures/" class="prev" rel="prev" title="Reverse Engineering Binary Protocols to Create IPS Signatures"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Reverse Engineering Binary Protocols to Create IPS Signatures</a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.113.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
