@@ -3,10 +3,18 @@
         <title>hypblog</title>
         <link>https://scratchadams.github.io/</link>
         <description>hyplog</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 27 Jun 2024 18:07:05 -0400</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 28 Jun 2024 08:44:11 -0400</lastBuildDate>
             <atom:link href="https://scratchadams.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
-    <title>Cve 2018 1160</title>
+    <title>Reverse Engineering Binary Protocols to Create IPS Signatures</title>
+    <link>https://scratchadams.github.io/posts/ips-signatures/</link>
+    <pubDate>Fri, 28 Jun 2024 08:44:11 -0400</pubDate>
+    <author>hyp</author>
+    <guid>https://scratchadams.github.io/posts/ips-signatures/</guid>
+    <description><![CDATA[Reverse Engineering Binary Protocols to Create IPS Signatures The purpose of this article is to demonstrate some tools and techniques used in reverse engineering binary protocols from packet captures, and using the discovered fields and commonalities to create IPS signatures. I decided to write this article as there seemed to be limited information regarding protocol reverse engineering from network traffic and I figured this could be a good resource for people looking to learn more about the process.]]></description>
+</item>
+<item>
+    <title>CVE-2018-1160</title>
     <link>https://scratchadams.github.io/posts/cve-2018-1160/</link>
     <pubDate>Thu, 27 Jun 2024 18:07:05 -0400</pubDate>
     <author>hyp</author>

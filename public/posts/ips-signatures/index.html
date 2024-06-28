@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Reverse Engineering Binary Protocols to Create IPS Signatures - hypblog</title><meta name="Description" content="hyplog"><meta property="og:title" content="Reverse Engineering Binary Protocols to Create IPS Signatures" />
+<meta property="og:description" content="Reverse Engineering Binary Protocols to Create IPS Signatures The purpose of this article is to demonstrate some tools and techniques used in reverse engineering binary protocols from packet captures, and using the discovered fields and commonalities to create IPS signatures. I decided to write this article as there seemed to be limited information regarding protocol reverse engineering from network traffic and I figured this could be a good resource for people looking to learn more about the process." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://scratchadams.github.io/posts/ips-signatures/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-06-28T08:44:11-04:00" />
+<meta property="article:modified_time" content="2024-06-28T08:44:11-04:00" /><meta property="og:site_name" content="hyplog" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Reverse Engineering Binary Protocols to Create IPS Signatures"/>
+<meta name="twitter:description" content="Reverse Engineering Binary Protocols to Create IPS Signatures The purpose of this article is to demonstrate some tools and techniques used in reverse engineering binary protocols from packet captures, and using the discovered fields and commonalities to create IPS signatures. I decided to write this article as there seemed to be limited information regarding protocol reverse engineering from network traffic and I figured this could be a good resource for people looking to learn more about the process."/>
+<meta name="application-name" content="hyplog">
+<meta name="apple-mobile-web-app-title" content="hyplog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://scratchadams.github.io/posts/ips-signatures/" /><link rel="prev" href="https://scratchadams.github.io/posts/cve-2018-1160/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Reverse Engineering Binary Protocols to Create IPS Signatures",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/scratchadams.github.io\/posts\/ips-signatures\/"
+        },"genre": "posts","wordcount":  1435 ,
+        "url": "https:\/\/scratchadams.github.io\/posts\/ips-signatures\/","datePublished": "2024-06-28T08:44:11-04:00","dateModified": "2024-06-28T08:44:11-04:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "hyp"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="hypblog">hyplog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="hypblog">hyplog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Reverse Engineering Binary Protocols to Create IPS Signatures</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-28">2024-06-28</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1435 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;7 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><h1 id="reverse-engineering-binary-protocols-to-create-ips-signatures">Reverse Engineering Binary Protocols to Create IPS Signatures</h1>
+<p>The purpose of this article is to demonstrate some tools and techniques used in reverse engineering binary protocols from packet captures, and using the discovered fields and commonalities to create IPS signatures. I decided to write this article as there seemed to be limited information regarding protocol reverse engineering from network traffic and I figured this could be a good resource for people looking to learn more about the process.</p>
+<h1 id="target-selection">Target Selection</h1>
+<p>Since I didn’t have a specific target in mind when I started this process, I figured it would be helpful to browse through the nmap service probes file to find examples of binary protocols that I could take a look at. <a href="https://raw.githubusercontent.com/nmap/nmap/master/nmap-service-probes" target="_blank" rel="noopener noreffer ">https://raw.githubusercontent.com/nmap/nmap/master/nmap-service-probes</a></p>
+<p>The service probes file contains the probe and match statements that nmap uses to fingerprint and identify various services. The nmap documentation outlines how these statements work: <a href="https://nmap.org/book/vscan-fileformat.html#:~:text=Nmap%20only%20uses%20probes%20that,describe%20which%20probes%20elicited%20responses" target="_blank" rel="noopener noreffer ">https://nmap.org/book/vscan-fileformat.html#:~:text=Nmap%20only%20uses%20probes%20that,describe%20which%20probes%20elicited%20responses</a></p>
+<p>For our purpose, we are just going to search through this document looking for escaped hex sequences “\x” and see which services those are associated with. In this case, I came across the following match statement:</p>
+<pre tabindex="0"><code>match teamviewer m|^\x17\x24\x0a\x20\x00....\x08\x13\x80\0\0\0\0\0\x01\0\0\0\x11\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0$| p/TeamViewer/ cpe:/a:teamviewer:teamviewer/
+</code></pre><p>Teamviewer was ultimately a good service to look into as it uses a binary communication protocol for which wireshark does not have a dissector for. Also, some of the protocol and application characteristics provided for some interesting challenges when it came to writing an actual IPS signature, which we discuss later on in this article.</p>
+<h1 id="manual-analysis">Manual Analysis</h1>
+<p>The first step of my process involved running the Teamviewer client and collecting some sample packet captures. On startup, teamviewer goes through an initial registration process where it reaches out to a teamviewer master server to register itself and obtain an ID that can be used by another teamviewer client to establish a remote connection. I collected packet captures of multiple iterations of this registration process so that I could compare the traffic and determine if any patterns identified in one capture were specific to that particular connection or if they existed as patterns across multiple connections.</p>
+<p>One of the first things that stood out while looking at this traffic, was that the majority of packets’ data started with the same 2 bytes (0x11 0x30). Based on the position of these bytes being the start of the data section and the regularity that they occurred, I determined that this was most likely a magic number. I wasn’t sure at first why this magic number would not be present in each packet, but I was able to make that determination after further investigation. The next pattern that was obvious was the byte following the magic number was more often than not the same value (0x3c). While this this value did reoccur a significant number of times, it had enough variance to indicate that it was definitely not a static value. At this point, I felt I didn’t have enough information about that particular field to label it.</p>
+<p>By filtering one of the pcaps to only display client to server traffic and scrolling through the packets, another pattern quickly emerged. For each packet that contained the previously mentioned magic number, the 9th byte would increment by 1, indicating the existence of a counter field. While validating this field, I also noticed that there were occasions when the counter would seemingly skip a number. Looking more closely at each packet, I could see that there were instances where a single packet may contain multiple instances of the magic number and counter field, which accounted for these skipped values. We can see this behavior in the following pcap data.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_Z425KVaailcQ4QLCsnxz-g.png"
+        data-srcset="/images/1_Z425KVaailcQ4QLCsnxz-g.png, /images/1_Z425KVaailcQ4QLCsnxz-g.png 1.5x, /images/1_Z425KVaailcQ4QLCsnxz-g.png 2x"
+        data-sizes="auto"
+        alt="/images/1_Z425KVaailcQ4QLCsnxz-g.png"
+        title="/images/1_Z425KVaailcQ4QLCsnxz-g.png" /></p>
+<h1 id="summary-of-identified-patterns">Summary of Identified Patterns</h1>
+<p>I was able to discover additional patterns in the raw packet data by exporting the data for multiple packets as a hex stream and using a text editor (sublime text in this case) to separate the already discovered patterns/fields and highlight sections of the data that could possibly be additional protocol control fields. Working with the raw data in a text editor made the process of discovering patterns much easier than it had been working directly in wireshark.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_RuFahtmmnw9J2h6qyfEg0Q.png"
+        data-srcset="/images/1_RuFahtmmnw9J2h6qyfEg0Q.png, /images/1_RuFahtmmnw9J2h6qyfEg0Q.png 1.5x, /images/1_RuFahtmmnw9J2h6qyfEg0Q.png 2x"
+        data-sizes="auto"
+        alt="/images/1_RuFahtmmnw9J2h6qyfEg0Q.png"
+        title="/images/1_RuFahtmmnw9J2h6qyfEg0Q.png" /></p>
+<p>Some of the additional control fields that I was able to discover through this process were a message size field, a message start indicator (0x8c 0x00 0x00 0x80), and a message end indicator (0x00 0x80 0x00 0x00 0x07). I also discovered a few additional fields that were clearly a part of the message header, but their function was not obvious based on this limited information I was working with. Finding the message end indicator or trailer was very helpful in determining why certain packets did not start with the magic number identified earlier. Essentially if a message size is too large for a single packet, it could be divided amongst two or more packets and the message trailer is used to indicate the end of that single message.</p>
+<h1 id="validating-findings">Validating Findings</h1>
+<p>To validate my findings, I first created a kaitai struct that was comprised of all the discovered fields, including the ones with an unknown function.</p>
+<pre tabindex="0"><code>meta:  
+	id: teamv  
+	file-extension: tvs  
+	endian: le  
+seq:  
+	- id: tv_header  
+	type: message_hdr  
+types:  
+	message_hdr:  
+		seq:  
+			- id: magic  
+			contents: [0x11, 0x30]  
+			- id: command  
+			size: 2  
+			- id: message_size  
+			type: u4  
+			- id: message_counter  
+			size: 4  
+			- id: unknown_1  
+			size: 4  
+			- id: unknown_2  
+			size: 4  
+			- id: unknown_3  
+			size: 4  
+			- id: message_start  
+			contents: [0x8c,0x00, 0x00, 0x80]  
+			- id: message_start_unknown  
+			size: 4  
+			- id: message_body  
+			size: message_size - 13  
+			- id: message_end  
+			size: 5
+</code></pre><p>I exported various packet data samples from the multiple captures and used the Kaitai Web IDE to validate the struct against them, which helped to quickly confirm that the kaitai struct accurately reflected the protocol structure.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_4uSk3brHlSdy9V0ajrFGKA.png"
+        data-srcset="/images/1_4uSk3brHlSdy9V0ajrFGKA.png, /images/1_4uSk3brHlSdy9V0ajrFGKA.png 1.5x, /images/1_4uSk3brHlSdy9V0ajrFGKA.png 2x"
+        data-sizes="auto"
+        alt="/images/1_4uSk3brHlSdy9V0ajrFGKA.png"
+        title="/images/1_4uSk3brHlSdy9V0ajrFGKA.png" /></p>
+<p>I also wanted to confirm that this structure applied for messages that spanned multiple packets. I created a quick python script to iterate through a pcap and export the message data, when the script encountered messages that spanned multiple packets, it would stitch them together into a single message using the message trailer as an indicator. You can find the script here: <a href="https://gist.github.com/scratchadams/e1593c35a7ae754429f77d5afa6ec172" target="_blank" rel="noopener noreffer ">https://gist.github.com/scratchadams/e1593c35a7ae754429f77d5afa6ec172</a></p>
+<p>This proved successful, the structure kaitai structure applied for both single packet and multi packet messages.</p>
+<h1 id="creating-an-ips-signature">Creating an IPS Signature</h1>
+<p>Now that I had an accurate representation of the teamviewer protocol registration process, my next step was to turn that information into a useable IPS rule to block teamviewer from registering with a master server.</p>
+<p>Before creating a rule based on the protocol structure, I decided to create a simple suricata rule to block outbound traffic to the default teamviewer port. This was interesting, as blocking the port itself caused teamviewer to adapt and use a combination of HTTP an other port numbers for communication. This was helpful in confirming the effectiveness of the protcol based rule that I ended up creating.</p>
+<p>The fields that I focused on to create the suricata rule were the magic number, the message size, the message start indicator, and the message trailer.</p>
+<pre tabindex="0"><code>drop tcp any any -&gt; any any \  
+	(msg:&#34;TV Reg Specific&#34;; \  
+	content:&#34;|11 30 3C|&#34;; \  
+	byte_math:bytes 4, offset 5, oper -, rvalue 17, result size; \  
+	content: &#34;|8C 00 00 80|&#34;; content: &#34;|00 80 00 00 07|&#34;; distance: size; sid:1; )
+</code></pre><p>Let’s break this rule down line by line. The first line indicates the action, which is to drop the traffic, as well as the specific protocol to be evaluated, in this case TCP. The first line also has the broad setting of any source IP and port and any destination IP port. The next line is the message displayed in the suricata logs. The third line is a content match on the 2 bytes that make up the magic number and the 1 byte that we will call the ‘command’. Remember this third byte (0x3c) is not a static value, but appeared in the majority of packet samples.</p>
+<p>The next line performs an operation on some specific bytes extracted from the packet. This is the message size field being extracted from the packet and the size of the header and trailer being subtracted from that value, the result of this operation is saved to a variable named ‘size’. The final line consists of 2 content matches. The first content match is the message start and the second content match is the message trailer. The distance between these two content matches is also evaluated and must match the ‘size’ variable for the rule to take effect.</p>
+<p>Upon testing, this rule proved to be effective in completely stopping teamviewer from being able to register with a master server, rendering the application useless.</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-06-28</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://scratchadams.github.io/posts/ips-signatures/" data-title="Reverse Engineering Binary Protocols to Create IPS Signatures"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://scratchadams.github.io/posts/ips-signatures/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://scratchadams.github.io/posts/ips-signatures/" data-title="Reverse Engineering Binary Protocols to Create IPS Signatures"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://scratchadams.github.io/posts/ips-signatures/" data-title="Reverse Engineering Binary Protocols to Create IPS Signatures"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://scratchadams.github.io/posts/ips-signatures/" data-title="Reverse Engineering Binary Protocols to Create IPS Signatures"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/cve-2018-1160/" class="prev" rel="prev" title="CVE-2018-1160"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>CVE-2018-1160</a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.113.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
