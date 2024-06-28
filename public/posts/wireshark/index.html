@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Writing a Wireshark dissector to parse data embedded in ICMP headers - hypblog</title><meta name="Description" content="hyplog"><meta property="og:title" content="Writing a Wireshark dissector to parse data embedded in ICMP headers" />
+<meta property="og:description" content="Writing a Wireshark dissector to parse data embedded in ICMP headers I recently spent some time repurposing fields in ICMP headers in order to do a basic file transfer. I decided to use the code, ID, and sequence fields to achieve this which meant I could fit 5 bytes of data into each header. The PoC implementation was very straightforward to create using scapy. Essentially just read in the file and for every 5 bytes create an ICMP packet, append that packet to a list, and send out the list of packets once complete." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://scratchadams.github.io/posts/wireshark/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-06-28T09:06:43-04:00" />
+<meta property="article:modified_time" content="2024-06-28T09:06:43-04:00" /><meta property="og:site_name" content="hyplog" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Writing a Wireshark dissector to parse data embedded in ICMP headers"/>
+<meta name="twitter:description" content="Writing a Wireshark dissector to parse data embedded in ICMP headers I recently spent some time repurposing fields in ICMP headers in order to do a basic file transfer. I decided to use the code, ID, and sequence fields to achieve this which meant I could fit 5 bytes of data into each header. The PoC implementation was very straightforward to create using scapy. Essentially just read in the file and for every 5 bytes create an ICMP packet, append that packet to a list, and send out the list of packets once complete."/>
+<meta name="application-name" content="hyplog">
+<meta name="apple-mobile-web-app-title" content="hyplog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://scratchadams.github.io/posts/wireshark/" /><link rel="prev" href="https://scratchadams.github.io/posts/bggp3/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Writing a Wireshark dissector to parse data embedded in ICMP headers",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/scratchadams.github.io\/posts\/wireshark\/"
+        },"genre": "posts","wordcount":  1963 ,
+        "url": "https:\/\/scratchadams.github.io\/posts\/wireshark\/","datePublished": "2024-06-28T09:06:43-04:00","dateModified": "2024-06-28T09:06:43-04:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "hyp"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="hypblog">hyplog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="hypblog">hyplog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Writing a Wireshark dissector to parse data embedded in ICMP headers</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>hyp</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-28">2024-06-28</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1963 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;10 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><h1 id="writing-a-wireshark-dissector-to-parse-data-embedded-in-icmp-headers">Writing a Wireshark dissector to parse data embedded in ICMP headers</h1>
+<p>I recently spent some time repurposing fields in ICMP headers in order to do a basic file transfer. I decided to use the code, ID, and sequence fields to achieve this which meant I could fit 5 bytes of data into each header. The PoC implementation was very straightforward to create using scapy. Essentially just read in the file and for every 5 bytes create an ICMP packet, append that packet to a list, and send out the list of packets once complete. The PoC script can be found here: <a href="https://github.com/scratchadams/wireshark/blob/main/icmp.py" target="_blank" rel="noopener noreffer ">https://github.com/scratchadams/wireshark/blob/main/icmp.py</a></p>
+<p>After creating this PoC, I thought it might be interesting to write a custom Wireshark dissector to parse out the ‘data’ fields and somehow rebuild the data stream so the file’s binary data could be viewed within Wireshark. The first part of this task was actually pretty easy to accomplish, the official Wireshark documentation has some great instructions on how to create a dissector as a C plugin which were very helpful for getting started: <a href="https://www.wireshark.org/docs/wsdg_html_chunked/ChapterDissection.html" target="_blank" rel="noopener noreffer ">https://www.wireshark.org/docs/wsdg_html_chunked/ChapterDissection.html</a> . The second part of this task proved to be much more difficult than I had initially expected, and I ended up making a number of edits to the Wireshark source code and learning a bit about how protocol dissectors are created in the main source tree (outside of plugins). In this writeup, I am going to break down my dissector, as well as some relevant subsystems within the Wireshark source where I made changes.</p>
+<p>The first step in creating any dissector is registering the protocol. The following function: <strong>proto_register_muhproto</strong> was created to register the protocol when Wireshark starts up, as well as initialize some values such as the protocol fields. I won’t go into too many details about this registration process, as it is covered very well in the official documentation, but there is a particular function called during this registration process that I do want to call out. This function is <strong>register_follow_stream</strong> and is called as such:</p>
+<pre tabindex="0"><code>register_follow_stream(proto_muhproto, &#34;muhproto_follow&#34;, muhproto_follow_conv_filter, muhproto_follow_index_filter, muhproto_follow_address_filter, udp_port_to_display, follow_tvb_tap_listener);
+</code></pre><p>This purpose of this function is to register the protocol and associated filters so that they can be treated as a stream of data within Wireshark. This is going to be a very important part of rebuilding the binary data from our file transfer, as it will allow us to associate the packets hitting our dissector as continuous data. Let’s break down the arguments to this function so we can get a better idea of what is going on here.</p>
+<p>The first argument, <strong>proto_muhproto</strong>, is the protocol ID that is returned upon registering the dissector protocol and is used to associate the filters and handlers passed through this function with the protocol defined in our dissector. The second argument, <strong>“muhproto_follow”</strong>, is what is called a ‘tap listener string’ (more on taps later). The third, fourth, and fifth arguments are functions that define filters associated with the protocol being dissected. For example, the <strong>muhproto_follow_index_filter</strong> function is defined as such:</p>
+<pre tabindex="0"><code>static gchar *muhproto_follow_index_filter(guint stream,   
+    guint sub_stream _U_)   
+{  
+      
+    return ws_strdup_printf(&#34;muhproto.stream eq %u&#34;, stream);
+}
+</code></pre><p>The above filter gets applied when the <strong>FollowStreamDialog</strong> is triggered for this particular protocol, which is exposed through the UI by either clicking ‘<strong>Analyze &gt; Follow &gt; [Protocol Type]’</strong> menu option in the toolbar or right-clicking a packet and selecting ‘<strong>Follow &gt; [Protocol Type]’.</strong> We can see how this is called by looking at the call stack in GDB:</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_0qnOynnUhJAiQ8yBs2Bl9A.png"
+        data-srcset="/images/1_0qnOynnUhJAiQ8yBs2Bl9A.png, /images/1_0qnOynnUhJAiQ8yBs2Bl9A.png 1.5x, /images/1_0qnOynnUhJAiQ8yBs2Bl9A.png 2x"
+        data-sizes="auto"
+        alt="/images/1_0qnOynnUhJAiQ8yBs2Bl9A.png"
+        title="/images/1_0qnOynnUhJAiQ8yBs2Bl9A.png" /></p>
+<p>We will get into the details about how the follow options are added to the UI for our protocol later in the article, but for now it is just important to know that these filters get associated with the protocol follow stream. The next argument passed to the <strong>register_follow_stream</strong> function is <strong>udp_port_to_display</strong>. For the purpose of this dissector, this particular function is just a placeholder and should always return 0, but typically a transport protocol such as TCP or UDP is going to reference port numbers to help differentiate between streams, and the function that is passed here for other such protocols should return the valid port number in use.</p>
+<p>The final argument passed to <strong>register_follow_stream</strong> is <strong>follow_tvb_tap_listener,</strong> which is a tap function handler used to provide the follow stream data in tvb format, which is short for ‘Testy Virtual Buffer’ and is described as a buffer designed to throw an exception if an attempt is made to read outside its boundaries. Adding a tap interface to a protocol dissector allows other items within Wireshark to interact with packet data as it is being dissected. We register the tap interface for our dissector with the following call:</p>
+<pre tabindex="0"><code>muh_follow_tap = register_tap(&#34;muhproto_follow&#34;);
+</code></pre><p>Once the tap interface is registered, it can be called from the packet dissect function as such:</p>
+<pre tabindex="0"><code>tap_queue_packet(muh_follow_tap, pinfo, tvb);
+</code></pre><p>The above function will push the packet that is being dissected to anything that is currently tapping the protocol. The first argument provides the ID of the registered tap interface, the second argument provides a packet information structure of the packet being dissected, and the third argument provides the packet data buffer from which we will reconstruct our binary.</p>
+<p>The source comments for <strong>tap_queue_packet</strong> mention that the “tap reader is responsible to know how to parse any structure pointed to by the tap specific data pointer”. We can see this behavior in action within the <strong>readFollowStream</strong> method which is called when the <strong>openFollowStreamDialog</strong> method is triggered from the UI as seen in this call stack:</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_u4bOF2UaCqYeachI94RngA.png"
+        data-srcset="/images/1_u4bOF2UaCqYeachI94RngA.png, /images/1_u4bOF2UaCqYeachI94RngA.png 1.5x, /images/1_u4bOF2UaCqYeachI94RngA.png 2x"
+        data-sizes="auto"
+        alt="/images/1_u4bOF2UaCqYeachI94RngA.png"
+        title="/images/1_u4bOF2UaCqYeachI94RngA.png" /></p>
+<p><strong>readFollowStream</strong> loops through the packets in the follow stream, grabs the data from the packet structure, then appends that data to a buffer which gets passed to <strong>showBuffer</strong> which handles writing that data to the stream dialog display. To properly parse out the binary data from the packets being handled by my dissector, I added an exception within this function to handle any packets of type <strong>MUHPROTO</strong>, and only append specific bytes to the data buffer being passed to <strong>showBuffer</strong> instead of appending the entire packet.</p>
+<p>The additions of the tap handler and follow stream to our dissector provide the ability to treat ICMP packets between two hosts as a stream, and the added exception to the follow stream dialog ensures that the data being presented in that stream is only the binary data that we have embedded into certain fields of the ICMP header.</p>
+<p>Now that we have the ability to treat the header data as a stream, there is some additional work that needs to be done to expose this functionality for our registered protocol in the UI. Wireshark uses the Qt framework for its GUI and makes use of the designer UI file type that this framework provides. A designer UI file essentially allows UI elements to be defined in XML format which get generated into C++ at compile time. Check out the Qt documentation for some more information on how this works: <a href="https://doc.qt.io/qt-5/designer-using-a-ui-file.html" target="_blank" rel="noopener noreffer ">https://doc.qt.io/qt-5/designer-using-a-ui-file.html</a></p>
+<p>I was able to determine how to add the proper UI elements for my protocol to the UI by referencing the source code for UDP follow streams. The first thing that needs to be create is a method that will ultimately get referenced in the UI designer file, which is defined as follows:</p>
+<pre tabindex="0"><code>void WiresharkMainWindow::on_actionAnalyzeFollowMUHStream_triggered()  
+{  
+    openFollowStreamDialogForType(FOLLOW_MUHPROTO);  
+}
+</code></pre><p>We can see that our method <strong>on_actionAnalyzeFollowMUHStream_triggered</strong> calls the <strong>openFollowStreamDialogForType</strong> method and passes <strong>FOLLOW_MUHPROTO</strong> as an argument. That particular argument needs to be added to an already defined enum located in epan/follow.h as such:</p>
+<pre tabindex="0"><code>/* Type of follow we are doing */  
+typedef enum {  
+    FOLLOW_TCP,  
+    FOLLOW_TLS,  
+    FOLLOW_UDP,  
+    FOLLOW_DCCP,  
+    FOLLOW_HTTP,  
+    FOLLOW_HTTP2,  
+    FOLLOW_QUIC,  
+    FOLLOW_SIP,  
+    FOLLOW_MUHPROTO,  
+} follow_type_t;
+</code></pre><p>The <strong>openFollowStreamDialogForType</strong> method then calls <strong>openFollowStreamDialog</strong> passing along the type, which creates a new <strong>FollowStreamDialog.</strong> Within the <strong>FollowStreamDialog</strong> method, we need to create an additional case within the switch statement that handles our protocol type as such:</p>
+<pre tabindex="0"><code>switch(type)  
+    {  
+    case FOLLOW_TCP:  
+        follower_ = get_follow_by_name(&#34;TCP&#34;);  
+        break;  
+    case FOLLOW_TLS:  
+        follower_ = get_follow_by_name(&#34;TLS&#34;);  
+        break;  
+    case FOLLOW_UDP:  
+        follower_ = get_follow_by_name(&#34;UDP&#34;);  
+        break;  
+    case FOLLOW_DCCP:  
+        follower_ = get_follow_by_name(&#34;DCCP&#34;);  
+        break;  
+    case FOLLOW_HTTP:  
+        follower_ = get_follow_by_name(&#34;HTTP&#34;);  
+        break;  
+    case FOLLOW_HTTP2:  
+        follower_ = get_follow_by_name(&#34;HTTP2&#34;);  
+        break;  
+    case FOLLOW_QUIC:  
+        follower_ = get_follow_by_name(&#34;QUIC&#34;);  
+        break;  
+    case FOLLOW_SIP:  
+        follower_ = get_follow_by_name(&#34;SIP&#34;);  
+        break;  
+    case FOLLOW_MUHPROTO:  
+        follower_ = get_follow_by_name(&#34;MUHPROTO&#34;);  
+        break;  
+    default :  
+        ws_assert_not_reached();  
+    }
+</code></pre><p>The <strong>get_follow_by_name</strong> function that is triggered by this case does a search through the list of registered followers based on the protocol short name passed as an argument (<strong>MUHPROTO</strong> in this case) and returns a tap interface associated with that protocol. After a new <strong>FollowStreamDialog</strong> is created, the <strong>follow</strong> method is called. I added an additional case to the switch statement for handling protocol types in this method as well, which will update some values in the UI:</p>
+<pre tabindex="0"><code>case FOLLOW_MUHPROTO:  
+    {  
+        int stream_count = 1;  
+        ui-&gt;streamNumberSpinBox-&gt;blockSignals(true);  
+        ui-&gt;streamNumberSpinBox-&gt;setMaximum(stream_count-1);  
+        ui-&gt;streamNumberSpinBox-&gt;setValue(stream_num);  
+        ui-&gt;streamNumberSpinBox-&gt;blockSignals(false);  
+        ui-&gt;streamNumberSpinBox-&gt;setToolTip(tr(&#34;%Ln total stream(s).&#34;, &#34;&#34;, stream_count));  
+        ui-&gt;streamNumberLabel-&gt;setToolTip(ui-&gt;streamNumberSpinBox-&gt;toolTip());break;  
+    }
+</code></pre><p>Ultimately, the <strong>follow</strong> method will call another method called <strong>followStream</strong> which calls <strong>readStream</strong> where another type case will need to be added as follows:</p>
+<pre tabindex="0"><code>
+switch(follow_type_) {    case FOLLOW_TCP :  
+    case FOLLOW_UDP :  
+    case FOLLOW_MUHPROTO:  
+    case FOLLOW_DCCP :  
+    case FOLLOW_HTTP :  
+    case FOLLOW_HTTP2:  
+    case FOLLOW_QUIC:  
+    case FOLLOW_TLS :  
+    case FOLLOW_SIP :  
+        ret = readFollowStream();  
+        break;default :  
+        ret = (frs_return_t)0;  
+        ws_assert_not_reached();  
+        break;  
+    }
+</code></pre><p>As we can see above, for every protocol that we have a type case defined in this switch statement we will call <strong>readFollowStream</strong> which was the method we mentioned earlier that handles reading and displaying the packet data.</p>
+<p>The final portion of adding the follow stream functionality for our protocol will address adding the actual menu options for enabling a follow stream dialog, as well as creating a trigger to enable that menu option when a packet that matches the defined protocol is selected. To achieve this, we need to add an action to the UI designer file for the Wireshark main window (<strong>ui/qt/wireshark_main_window.ui</strong>) like so:</p>
+<pre tabindex="0"><code>&lt;action name=&#34;actionAnalyzeFollowMUHStream&#34;&gt;  
+   &lt;property name=&#34;enabled&#34;&gt;  
+    &lt;bool&gt;false&lt;/bool&gt;  
+   &lt;/property&gt;  
+   &lt;property name=&#34;text&#34;&gt;  
+    &lt;string&gt;MUHPROTO Stream&lt;/string&gt;  
+   &lt;/property&gt;  
+&lt;/action&gt;
+</code></pre><p>Then we need to reference the action in the existing Follow menu widget in the same file like so:</p>
+<pre tabindex="0"><code>&lt;widget class=&#34;QMenu&#34; name=&#34;menuFollow&#34;&gt;  
+     &lt;property name=&#34;title&#34;&gt;  
+      &lt;string&gt;Follow&lt;/string&gt;  
+     &lt;/property&gt;  
+     &lt;addaction name=&#34;actionAnalyzeFollowTCPStream&#34;/&gt;  
+     &lt;addaction name=&#34;actionAnalyzeFollowUDPStream&#34;/&gt;  
+     **&lt;addaction name=&#34;actionAnalyzeFollowMUHStream&#34;/&gt;**  
+     &lt;addaction name=&#34;actionAnalyzeFollowDCCPStream&#34;/&gt;  
+     &lt;addaction name=&#34;actionAnalyzeFollowTLSStream&#34;/&gt;  
+     &lt;addaction name=&#34;actionAnalyzeFollowHTTPStream&#34;/&gt;  
+     &lt;addaction name=&#34;actionAnalyzeFollowHTTP2Stream&#34;/&gt;  
+     &lt;addaction name=&#34;actionAnalyzeFollowQUICStream&#34;/&gt;  
+     &lt;addaction name=&#34;actionAnalyzeFollowSIPCall&#34;/&gt;  
+&lt;/widget&gt;
+</code></pre><p>We should note that the action has a property named <strong>Enabled</strong> which is set to false by default.</p>
+<p>Next we will extend the <strong>proto_get_frame_protocols</strong> function by adding an additional argument and some logic to handle our protocol. This function will set the passed argument to true if the currently selected packet matches our protocol:</p>
+<pre tabindex="0"><code>void  
+proto_get_frame_protocols(const wmem_list_t *layers, gboolean *is_ip,  
+              gboolean *is_tcp, gboolean *is_udp,  
+              gboolean *is_sctp, gboolean *is_tls,  
+              gboolean *is_rtp,  
+              gboolean *is_lte_rlc,  
+              gboolean *is_muhproto)  
+{  
+    wmem_list_frame_t *protos = wmem_list_head(layers);  
+    int     proto_id;  
+    const char *proto_name;    while (protos != NULL)  
+    {  
+        proto_id = GPOINTER_TO_INT(wmem_list_frame_data(protos));  
+        proto_name = proto_get_protocol_filter_name(proto_id);        
+        if (is_ip &amp;&amp; ((!strcmp(proto_name, &#34;ip&#34;)) ||  
+                  (!strcmp(proto_name, &#34;ipv6&#34;)))) {  
+            *is_ip = TRUE;  
+        } else if (is_tcp &amp;&amp; !strcmp(proto_name, &#34;tcp&#34;)) {  
+            *is_tcp = TRUE;  
+        } else if (is_udp &amp;&amp; !strcmp(proto_name, &#34;udp&#34;)) {  
+            *is_udp = TRUE;  
+        } else if (is_sctp &amp;&amp; !strcmp(proto_name, &#34;sctp&#34;)) {  
+            *is_sctp = TRUE;  
+        } else if (is_tls &amp;&amp; !strcmp(proto_name, &#34;tls&#34;)) {  
+            *is_tls = TRUE;  
+        } else if (is_rtp &amp;&amp; !strcmp(proto_name, &#34;rtp&#34;)) {  
+            *is_rtp = TRUE;  
+        } else if (is_lte_rlc &amp;&amp; !strcmp(proto_name, &#34;rlc-lte&#34;)) {  
+            *is_lte_rlc = TRUE;  
+        } else if (is_muhproto &amp;&amp; !strcmp(proto_name, &#34;muhproto&#34;)) {  
+            *is_muhproto = TRUE;  
+        }
+</code></pre><p>Finally, we will add a call to check the argument set by <strong>proto_get_frame_protocols</strong> which if true will enable the menu option and make it clickable:</p>
+<pre tabindex="0"><code>    main_ui_-&gt;actionAnalyzeFollowTCPStream-&gt;setEnabled(is_tcp);  
+    main_ui_-&gt;actionAnalyzeFollowUDPStream-&gt;setEnabled(is_udp);  
+    main_ui_-&gt;actionAnalyzeFollowMUHStream-&gt;setEnabled(is_muhproto); 
+    main_ui_-&gt;actionAnalyzeFollowDCCPStream-&gt;setEnabled(is_dccp);  
+    main_ui_-&gt;actionAnalyzeFollowTLSStream-&gt;setEnabled(is_tls &amp;&amp; !is_quic);  
+    main_ui_-&gt;actionAnalyzeFollowHTTPStream-&gt;setEnabled(is_http);  
+    main_ui_-&gt;actionAnalyzeFollowHTTP2Stream-&gt;setEnabled(is_http2);  
+    main_ui_-&gt;actionAnalyzeFollowQUICStream-&gt;setEnabled(is_quic);  
+    main_ui_-&gt;actionAnalyzeFollowSIPCall-&gt;setEnabled(is_sip);
+</code></pre><p>At this point, the protocol dissection and follow stream functionality should be fully functional and can be tested with the python script linked at the top of the article. I have included the source to my dissector in this repo and will be adding some file diffs to cover the portions of the main source tree that were adjusted to add this functionality:</p>
+<p><a href="https://github.com/scratchadams/wireshark" target="_blank" rel="noopener noreffer ">https://github.com/scratchadams/wireshark</a></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/images/1_dWbdVtzaJ-ld-f0VKzQOow.png"
+        data-srcset="/images/1_dWbdVtzaJ-ld-f0VKzQOow.png, /images/1_dWbdVtzaJ-ld-f0VKzQOow.png 1.5x, /images/1_dWbdVtzaJ-ld-f0VKzQOow.png 2x"
+        data-sizes="auto"
+        alt="/images/1_dWbdVtzaJ-ld-f0VKzQOow.png"
+        title="/images/1_dWbdVtzaJ-ld-f0VKzQOow.png" /></p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-06-28</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://scratchadams.github.io/posts/wireshark/" data-title="Writing a Wireshark dissector to parse data embedded in ICMP headers"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://scratchadams.github.io/posts/wireshark/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://scratchadams.github.io/posts/wireshark/" data-title="Writing a Wireshark dissector to parse data embedded in ICMP headers"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://scratchadams.github.io/posts/wireshark/" data-title="Writing a Wireshark dissector to parse data embedded in ICMP headers"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://scratchadams.github.io/posts/wireshark/" data-title="Writing a Wireshark dissector to parse data embedded in ICMP headers"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/bggp3/" class="prev" rel="prev" title="Bggp3"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Bggp3</a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.113.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

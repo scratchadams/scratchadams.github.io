@@ -3,7 +3,15 @@
         <title>All Posts - hypblog</title>
         <link>https://scratchadams.github.io/posts/</link>
         <description>All Posts | hypblog</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 28 Jun 2024 08:54:21 -0400</lastBuildDate><atom:link href="https://scratchadams.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 28 Jun 2024 09:06:43 -0400</lastBuildDate><atom:link href="https://scratchadams.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>Writing a Wireshark dissector to parse data embedded in ICMP headers</title>
+    <link>https://scratchadams.github.io/posts/wireshark/</link>
+    <pubDate>Fri, 28 Jun 2024 09:06:43 -0400</pubDate>
+    <author>hyp</author>
+    <guid>https://scratchadams.github.io/posts/wireshark/</guid>
+    <description><![CDATA[Writing a Wireshark dissector to parse data embedded in ICMP headers I recently spent some time repurposing fields in ICMP headers in order to do a basic file transfer. I decided to use the code, ID, and sequence fields to achieve this which meant I could fit 5 bytes of data into each header. The PoC implementation was very straightforward to create using scapy. Essentially just read in the file and for every 5 bytes create an ICMP packet, append that packet to a list, and send out the list of packets once complete.]]></description>
+</item>
+<item>
     <title>Bggp3</title>
     <link>https://scratchadams.github.io/posts/bggp3/</link>
     <pubDate>Fri, 28 Jun 2024 08:54:21 -0400</pubDate>
